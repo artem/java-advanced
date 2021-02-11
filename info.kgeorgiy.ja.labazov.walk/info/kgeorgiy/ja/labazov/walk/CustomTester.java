@@ -1,10 +1,8 @@
 package info.kgeorgiy.ja.labazov.walk;
 
-import info.kgeorgiy.java.advanced.walk.RecursiveWalkTest;
-import info.kgeorgiy.java.advanced.walk.Tester;
-import info.kgeorgiy.java.advanced.walk.WalkTest;
+import info.kgeorgiy.java.advanced.base.BaseTester;
 
-public class CustomTester extends Tester {
+public class CustomTester extends BaseTester {
 
   public static void main(String[] args) {
     new CustomTester()
