@@ -19,7 +19,7 @@ public class Walk {
     private static long hashFile(Path path) {
         long h = 0;
         final int bits = 64;
-        final long mask = -(1L << (bits - bits / 8));
+        final long mask = -(1L << (bits - bits / 8)); // first bits/8 MSBs
 
         try (InputStream in = Files.newInputStream(path)) {
             int c;
@@ -88,13 +88,13 @@ public class Walk {
             Path output = Path.of(args[1]);
             Path parent = output.getParent();
             if (parent != null) {
-                createDirectories(parent);
+                Files.createDirectories(parent);
             }
             processInputFile(input, output);
         } catch (InvalidPathException e) {
-            System.err.println("Invalid filename specified:" + e.getMessage());
+            System.err.println("Invalid filename specified: " + e.getMessage());
         } catch (IOException e) {
-            System.err.println("Unable to create output file:" + e.getMessage());
+            System.err.println("Unable to create output dir: " + e.getMessage());
         }
     }
 }
