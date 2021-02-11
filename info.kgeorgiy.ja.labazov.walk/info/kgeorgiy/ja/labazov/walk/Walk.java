@@ -4,9 +4,10 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.*;
-
-import static java.nio.file.Files.createDirectories;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 
 public class Walk {
     private static void commitFileHash(String path, long hash, BufferedWriter out) throws IOException {
@@ -78,7 +79,7 @@ public class Walk {
     }
 
     public static void main(String[] args) {
-        if (args.length != 2) {
+        if (args == null || args.length != 2 || args[0] == null || args[1] == null) {
             System.err.println("Usage: java Walk <input> <output>");
             return;
         }
