@@ -1,9 +1,6 @@
 package info.kgeorgiy.ja.labazov.walk;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Objects;
@@ -43,14 +40,17 @@ public class Walk {
             final int bits = 64;
             final long mask = -(1L << (bits - bits / 8)); // first bits/8 MSBs
 
-            try (InputStream in = Files.newInputStream(path)) {
-                int c;
-                while ((c = in.read()) >= 0) {
-                    h = (h << bits / 8) + c;
-                    long high = h & mask;
-                    if (high != 0) {
-                        h ^= high >> (bits * 3 / 4);
-                        h &= ~high;
+            try (InputStream in = new BufferedInputStream(Files.newInputStream(path))) {
+                int size;
+                byte[] buffer = new byte[1024];
+                while ((size = in.read(buffer)) >= 0) {
+                    for (int i = 0; i < size; i++) {
+                        h = (h << bits / 8) + (buffer[i] & 0xff);
+                        long high = h & mask;
+                        if (high != 0) {
+                            h ^= high >> (bits * 3 / 4);
+                            h &= ~high;
+                        }
                     }
                 }
             } catch (IOException e) {
