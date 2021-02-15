@@ -5,7 +5,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Objects;
 
-public class Walk {
+public class RecursiveWalk {
     private static class WalkVisitor extends SimpleFileVisitor<Path> {
         private final BufferedWriter out;
 
