@@ -37,28 +37,28 @@ public class Walk {
             out.write(String.format("%016x %s", hash, path));
             out.newLine();
         }
-    }
 
-    private static long hashFile(Path path) {
-        long h = 0;
-        final int bits = 64;
-        final long mask = -(1L << (bits - bits / 8)); // first bits/8 MSBs
+        private static long hashFile(Path path) {
+            long h = 0;
+            final int bits = 64;
+            final long mask = -(1L << (bits - bits / 8)); // first bits/8 MSBs
 
-        try (InputStream in = Files.newInputStream(path)) {
-            int c;
-            while ((c = in.read()) >= 0) {
-                h = (h << bits/8) + c;
-                long high = h & mask;
-                if (high != 0) {
-                    h ^= high >> (bits * 3 / 4);
-                    h &= ~high;
+            try (InputStream in = Files.newInputStream(path)) {
+                int c;
+                while ((c = in.read()) >= 0) {
+                    h = (h << bits/8) + c;
+                    long high = h & mask;
+                    if (high != 0) {
+                        h ^= high >> (bits * 3 / 4);
+                        h &= ~high;
+                    }
                 }
+            } catch (IOException e) {
+                h = 0;
             }
-        } catch (IOException e) {
-            h = 0;
-        }
 
-        return h;
+            return h;
+        }
     }
 
     private static void processInputFile(final Path inputFilename, final Path outputFilename) {
