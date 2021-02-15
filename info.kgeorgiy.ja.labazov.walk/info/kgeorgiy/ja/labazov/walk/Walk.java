@@ -4,15 +4,39 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Objects;
 
 public class Walk {
-    private static void commitFileHash(String path, long hash, BufferedWriter out) throws IOException {
-        out.write(String.format("%016x %s", hash, path));
-        out.newLine();
+    private static class WalkVisitor extends SimpleFileVisitor<Path> {
+        private final BufferedWriter out;
+
+        private WalkVisitor(BufferedWriter out) {
+            this.out = out;
+        }
+
+        @Override
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+            Objects.requireNonNull(file);
+            Objects.requireNonNull(attrs);
+
+            long hash = hashFile(file);
+            commitFileHash(file.toString(), hash);
+            return FileVisitResult.CONTINUE;
+        }
+
+        @Override
+        public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+            Objects.requireNonNull(file);
+            commitFileHash(file.toString(), 0);
+            return FileVisitResult.CONTINUE;
+        }
+
+        public void commitFileHash(String path, long hash) throws IOException {
+            out.write(String.format("%016x %s", hash, path));
+            out.newLine();
+        }
     }
 
     private static long hashFile(Path path) {
@@ -37,36 +61,18 @@ public class Walk {
         return h;
     }
 
-    private static void processPathString(String pathStr, BufferedWriter out) throws IOException {
-        try {
-            Path path = Path.of(pathStr);
-            processPath(path, out);
-        } catch (InvalidPathException e) {
-            commitFileHash(pathStr, 0, out);
-        }
-    }
-
-    private static void processPath(Path path, BufferedWriter out) throws IOException {
-        if (Files.isDirectory(path)) {
-            try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
-                for (Path entry: stream) {
-                    processPath(entry, out);
-                }
-            } catch (IOException e) {
-                // TODO exceptions
-            }
-        } else {
-            long hash = hashFile(path);
-            commitFileHash(path.toString(), hash, out);
-        }
-    }
-
     private static void processInputFile(final Path inputFilename, final Path outputFilename) {
         try (BufferedReader reader = Files.newBufferedReader(inputFilename)) {
             try (BufferedWriter writer = Files.newBufferedWriter(outputFilename)) {
+                WalkVisitor walkVisitor = new WalkVisitor(writer);
                 String curEntry;
                 while ((curEntry = reader.readLine()) != null) {
-                    processPathString(curEntry, writer);
+                    try {
+                        Path path = Path.of(curEntry);
+                        Files.walkFileTree(path, walkVisitor);
+                    } catch (InvalidPathException e) {
+                        walkVisitor.commitFileHash(curEntry, 0);
+                    }
                 }
             } catch (IOException e) {
                 System.err.println("I/O error with output file: " + e.getMessage());
