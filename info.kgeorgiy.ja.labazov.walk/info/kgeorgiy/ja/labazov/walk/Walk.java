@@ -46,7 +46,7 @@ public class Walk {
             try (InputStream in = Files.newInputStream(path)) {
                 int c;
                 while ((c = in.read()) >= 0) {
-                    h = (h << bits/8) + c;
+                    h = (h << bits / 8) + c;
                     long high = h & mask;
                     if (high != 0) {
                         h ^= high >> (bits * 3 / 4);
