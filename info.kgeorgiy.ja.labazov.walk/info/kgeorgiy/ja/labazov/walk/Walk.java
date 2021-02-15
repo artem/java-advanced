@@ -99,7 +99,7 @@ public class Walk {
         } catch (InvalidPathException e) {
             System.err.println("Invalid filename specified: " + e.getMessage());
         } catch (IOException e) {
-            System.err.println("Unable to create output dir: " + e.getMessage());
+            System.err.println("Unable to create parent dir for output: " + e.getMessage());
         }
     }
 }
