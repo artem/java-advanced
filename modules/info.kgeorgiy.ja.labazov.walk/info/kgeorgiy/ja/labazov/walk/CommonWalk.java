@@ -23,10 +23,10 @@ public abstract class CommonWalk {
                         walkVisitor.commitFileHash(curEntry, 0);
                     }
                 }
-            } catch (IOException e) {
+            } catch (IOException | SecurityException e) {
                 System.err.println("I/O error with output file: " + e.getMessage());
             }
-        } catch (IOException e) {
+        } catch (IOException | SecurityException e) {
             System.err.println("I/O error with input file: " + e.getMessage());
         }
     }
@@ -42,7 +42,7 @@ public abstract class CommonWalk {
             processInputFile(input, output);
         } catch (InvalidPathException e) {
             System.err.println("Invalid filename specified: " + e.getMessage());
-        } catch (IOException e) {
+        } catch (IOException | SecurityException e) {
             System.err.println("Unable to create parent dir for output: " + e.getMessage());
         }
     }
