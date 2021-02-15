@@ -33,15 +33,15 @@ public class OldRecursiveWalkTest extends OldWalkTest {
         final String from = dir1.toString();
         final String to = dir2.resolve("..").resolve(dir1.getFileName()).toString();
 
-        final Map<String, Long> files = randomDirs(3, 4, 100, dir1);
+        final Map<String, String> files = randomDirs(3, 4, 100, dir1);
         files.putAll(files.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().replace(from, to), Map.Entry::getValue)));
         files.putAll(randomDirs(3, 4, 100, dir2));
 
         test(Arrays.asList(from, dir2.toString(), to), files);
     }
 
-    private Map<String, Long> randomDirs(final int n, final int d, final int maxL, final Path dir) throws IOException {
-        final Map<String, Long> result = randomFiles(RANDOM.nextInt(n + 1), maxL, dir);
+    private Map<String, String> randomDirs(final int n, final int d, final int maxL, final Path dir) throws IOException {
+        final Map<String, String> result = randomFiles(RANDOM.nextInt(n + 1), maxL, dir);
         if (d > 0) {
             for (int i = RANDOM.nextInt(n + 1); i < n; i++) {
                 result.putAll(randomDirs(n, d - 1, maxL, dir.resolve(randomFileName())));

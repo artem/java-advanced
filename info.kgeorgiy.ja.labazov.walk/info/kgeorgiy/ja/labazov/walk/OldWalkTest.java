@@ -30,9 +30,10 @@ import java.util.stream.Collectors;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class OldWalkTest extends BaseTest {
     protected static final Path DIR = Path.of("__Test__Walk__");
-    private static final String ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    private static final String ENGLISH_DIGITS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     protected static final Random RANDOM = new Random(23084701432182342L);
-    private String alphabet = ALPHABET;
+    public static final String ERROR_HASH = "0000000000000000";
+    private String alphabet = ENGLISH_DIGITS;
 
     @Rule
     public TestName name = new TestName();
@@ -73,18 +74,30 @@ public class OldWalkTest extends BaseTest {
 
     @Test
     public void test30_missingFiles() throws IOException {
-        final Map<String, Long> files = randomFiles(3, 0);
-        files.put(randomFileName(), 0L);
-        files.put(randomFileName(), 0L);
-        files.put(randomFileName(), 0L);
+        final Map<String, String> files = randomFiles(3, 0);
+        files.put(randomFileName(), ERROR_HASH);
+        files.put(randomFileName(), ERROR_HASH);
+        files.put(randomFileName(), ERROR_HASH);
+        files.put("//..", ERROR_HASH);
         test(files);
     }
 
     @Test
     public void test40_errorReading() throws IOException {
-        final Map<String, Long> files = randomFiles(3, 0);
-        files.put(DIR.toString() + "..", 0L);
-        files.put(DIR.toString() + "@", 0L);
+        final Map<String, String> files = randomFiles(3, 0);
+        files.put(DIR.toString() + "..", ERROR_HASH);
+        files.put(DIR.toString() + "@", ERROR_HASH);
+        test(files);
+    }
+
+    @Test
+    public void test45_partiallyMissingFiles() throws IOException {
+        final Map<String, String> files = new LinkedHashMap<>();
+        files.put("no-such-file-1", ERROR_HASH);
+        files.putAll(randomFiles(10, 100));
+        files.put("no-such-file-2", ERROR_HASH);
+        files.putAll(randomFiles(10, 100));
+        files.put("no-such-file-3", ERROR_HASH);
         test(files);
     }
 
@@ -101,7 +114,7 @@ public class OldWalkTest extends BaseTest {
     private void testAlphabet(final int n, final int maxL, final String alphabet) throws IOException {
         this.alphabet = alphabet;
         test(randomFiles(n, maxL));
-        this.alphabet = ALPHABET;
+        this.alphabet = ENGLISH_DIGITS;
     }
 
     @Test
@@ -159,18 +172,7 @@ public class OldWalkTest extends BaseTest {
         runRaw(createEmptyFile("a"), createEmptyFile("b"), "c");
     }
 
-    @Test
-    public void test80_partiallyMissingFiles() throws IOException {
-        final Map<String, Long> files = new LinkedHashMap<>();
-        files.put("no-such-file-1", 0L);
-        files.putAll(randomFiles(10, 100));
-        files.put("no-such-file-2", 0L);
-        files.putAll(randomFiles(10, 100));
-        files.put("no-such-file-3", 0L);
-        test(files);
-    }
-
-    private Map<String, Long> randomFiles(final int n, final int maxL) throws IOException {
+    private Map<String, String> randomFiles(final int n, final int maxL) throws IOException {
         return randomFiles(n, maxL, getTestDir());
     }
 
@@ -180,11 +182,11 @@ public class OldWalkTest extends BaseTest {
         return input.toString();
     }
 
-    protected void test(final Map<String, Long> files) {
+    protected void test(final Map<String, String> files) {
         test(files.keySet(), files);
     }
 
-    protected void test(final Collection<String> inputs, final Map<String, Long> files) {
+    protected void test(final Collection<String> inputs, final Map<String, String> files) {
         final Path inputFile = DIR.resolve(name.getMethodName() + ".in");
         final Path outputFile = DIR.resolve(name.getMethodName() + ".out");
         try {
@@ -198,7 +200,7 @@ public class OldWalkTest extends BaseTest {
                 final String[] parts = line.split(" ", 2);
                 Assert.assertEquals("Invalid line format\n" + line, 2, parts.length);
                 Assert.assertTrue("Unexpected file " + parts[1], files.containsKey(parts[1]));
-                Assert.assertEquals("Wrong hash", String.format("%016x", files.remove(parts[1])), parts[0]);
+                Assert.assertEquals("Wrong hash", files.remove(parts[1]), parts[0]);
             }
         } catch (final IOException e) {
             throw new AssertionError("Cannot write output file " + outputFile);
@@ -237,9 +239,9 @@ public class OldWalkTest extends BaseTest {
         return stringWriter.toString();
     }
 
-    protected Map<String, Long> randomFiles(final int n, final int maxL, final Path dir) throws IOException {
+    protected Map<String, String> randomFiles(final int n, final int maxL, final Path dir) throws IOException {
         Files.createDirectories(dir);
-        final Map<String, Long> result = new HashMap<>();
+        final Map<String, String> result = new HashMap<>();
         for (int i = 0; i < n; i++) {
             final String name = randomFileName();
             try {
@@ -249,7 +251,7 @@ public class OldWalkTest extends BaseTest {
                 Files.write(file, bytes);
                 result.put(file.toString(), hash(bytes));
             } catch (final InvalidPathException ignore) {
-                result.put(dir + "/" + name, 0L);
+                result.put(dir + "/" + name, ERROR_HASH);
             }
         }
         return result;
@@ -261,10 +263,9 @@ public class OldWalkTest extends BaseTest {
                 .collect(Collectors.joining());
     }
 
-    public static long hash(final byte[] bytes) {
-        long start = 0;
-        for (final byte b : bytes) {
-            start = (start << 8) + (b & 0xff);
+    public static long hash(final byte[] bytes, final int size, long start) {
+        for (int i = 0; i < size; i++) {
+            start = (start << 8) + (bytes[i] & 0xff);
             final long high = start & 0xff00_0000_0000_0000L;
             if (high != 0) {
                 start ^= high >> 48;
@@ -272,5 +273,9 @@ public class OldWalkTest extends BaseTest {
             }
         }
         return start;
+    }
+
+    private static String hash(final byte[] bytes) {
+        return String.format("%016x", hash(bytes, bytes.length, 0));
     }
 }
