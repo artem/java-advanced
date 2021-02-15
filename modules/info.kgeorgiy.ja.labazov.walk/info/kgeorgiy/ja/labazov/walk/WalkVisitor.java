@@ -3,6 +3,7 @@ package info.kgeorgiy.ja.labazov.walk;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Writer;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,9 +12,9 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Objects;
 
 public class WalkVisitor extends SimpleFileVisitor<Path> {
-    protected final BufferedWriter out;
+    protected final Writer out;
 
-    public WalkVisitor(BufferedWriter out) {
+    public WalkVisitor(Writer out) {
         this.out = out;
     }
 
@@ -60,7 +61,6 @@ public class WalkVisitor extends SimpleFileVisitor<Path> {
     }
 
     public void commitFileHash(String path, long hash) throws IOException {
-        out.write(String.format("%016x %s", hash, path));
-        out.newLine();
+        out.write(String.format("%016x %s%n", hash, path));
     }
 }
