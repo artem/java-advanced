@@ -40,9 +40,9 @@ public class Walk {
             final int bits = 64;
             final long mask = -(1L << (bits - bits / 8)); // first bits/8 MSBs
 
-            try (InputStream in = new BufferedInputStream(Files.newInputStream(path))) {
+            try (InputStream in = Files.newInputStream(path)) {
                 int size;
-                byte[] buffer = new byte[1024];
+                byte[] buffer = new byte[4096];
                 while ((size = in.read(buffer)) >= 0) {
                     for (int i = 0; i < size; i++) {
                         h = (h << bits / 8) + (buffer[i] & 0xff);
