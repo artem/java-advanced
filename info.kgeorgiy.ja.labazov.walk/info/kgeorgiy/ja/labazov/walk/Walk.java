@@ -11,9 +11,7 @@ import java.nio.file.Path;
 
 public class Walk {
     private static void commitFileHash(String path, long hash, BufferedWriter out) throws IOException {
-        out.write(String.format("%016x", hash));
-        out.write(' ');
-        out.write(path);
+        out.write(String.format("%016x %s", hash, path));
         out.newLine();
     }
 
