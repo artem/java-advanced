@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/modules/info.kgeorgiy.ja.labazov.walk/info.kgeorgiy.ja.labazov.walk.iml" filepath="$PROJECT_DIR$/modules/info.kgeorgiy.ja.labazov.walk/info.kgeorgiy.ja.labazov.walk.iml" />
+      <module fileurl="file://$PROJECT_DIR$/modules/info.kgeorgiy.ja.labazov/info.kgeorgiy.ja.labazov.iml" filepath="$PROJECT_DIR$/modules/info.kgeorgiy.ja.labazov/info.kgeorgiy.ja.labazov.iml" />
       <module fileurl="file://$PROJECT_DIR$/modules/info.kgeorgiy.java.advanced.base/info.kgeorgiy.java.advanced.base.iml" filepath="$PROJECT_DIR$/modules/info.kgeorgiy.java.advanced.base/info.kgeorgiy.java.advanced.base.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/java-advanced-2021.iml" filepath="$PROJECT_DIR$/.idea/java-advanced-2021.iml" />
     </modules>
