@@ -1,6 +1,5 @@
 package info.kgeorgiy.ja.labazov.walk;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;

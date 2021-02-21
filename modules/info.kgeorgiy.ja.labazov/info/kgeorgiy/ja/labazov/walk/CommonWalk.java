@@ -10,40 +10,61 @@ import java.nio.file.Path;
 public abstract class CommonWalk {
     protected abstract WalkVisitor getVisitor(BufferedWriter out);
 
+    protected static boolean invalidArguments(String[] args, String className) {
+        if (args == null || args.length != 2 || args[0] == null || args[1] == null) {
+            System.err.println("Usage: java " + className + " <input> <output>");
+            return true;
+        }
+        return false;
+    }
+
     private void processInputFile(final Path inputFilename, final Path outputFilename) {
         try (BufferedReader reader = Files.newBufferedReader(inputFilename)) {
+            try {
+                Path parent = outputFilename.getParent();
+                if (parent != null) {
+                    Files.createDirectories(parent);
+                }
+            } catch (IOException e) {
+                System.err.println("Unable to create parent dir for output: " + e.getMessage());
+                return;
+            }
+
             try (BufferedWriter writer = Files.newBufferedWriter(outputFilename)) {
                 WalkVisitor walkVisitor = getVisitor(writer);
                 String curEntry;
-                while ((curEntry = reader.readLine()) != null) {
-                    try {
-                        Path path = Path.of(curEntry);
-                        Files.walkFileTree(path, walkVisitor);
-                    } catch (InvalidPathException e) {
-                        walkVisitor.commitFileHash(curEntry, 0);
+                try {
+                    while ((curEntry = reader.readLine()) != null) {
+                        try {
+                            Path path = Path.of(curEntry);
+                            Files.walkFileTree(path, walkVisitor);
+                        } catch (InvalidPathException e) {
+                            walkVisitor.commitFileHash(curEntry, 0);
+                        }
                     }
+                } catch (IOException e) {
+                    System.err.println("I/O error with input file: " + e.getMessage());
                 }
             } catch (IOException e) {
                 System.err.println("I/O error with output file: " + e.getMessage());
             }
         } catch (IOException e) {
-            System.err.println("I/O error with input file: " + e.getMessage());
+            System.err.println("Unable to open input file: " + e.getMessage());
         }
     }
 
     public void run(String in, String out) {
         try {
             Path input = Path.of(in);
-            Path output = Path.of(out);
-            Path parent = output.getParent();
-            if (parent != null) {
-                Files.createDirectories(parent);
+            try {
+                Path output = Path.of(out);
+
+                processInputFile(input, output);
+            } catch (InvalidPathException e) {
+                System.err.printf("Invalid output filename specified: %s: %s%n", out, e.getMessage());
             }
-            processInputFile(input, output);
         } catch (InvalidPathException e) {
-            System.err.println("Invalid filename specified: " + e.getMessage());
-        } catch (IOException e) {
-            System.err.println("Unable to create parent dir for output: " + e.getMessage());
+            System.err.printf("Invalid input filename specified: %s: %s%n", in, e.getMessage());
         }
     }
 }

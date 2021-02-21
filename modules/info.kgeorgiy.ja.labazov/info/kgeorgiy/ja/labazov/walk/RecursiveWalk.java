@@ -4,8 +4,7 @@ import java.io.BufferedWriter;
 
 public class RecursiveWalk extends CommonWalk {
     public static void main(String[] args) {
-        if (args == null || args.length != 2 || args[0] == null || args[1] == null) {
-            System.err.println("Usage: java RecursiveWalk <input> <output>");
+        if (invalidArguments(args, "RecursiveWalk")) {
             return;
         }
 
