@@ -3,6 +3,24 @@ package info.kgeorgiy.ja.labazov.arrayset;
 import java.util.*;
 
 public class ArraySet<E> extends AbstractSet<E> implements NavigableSet<E> {
+    private final Comparator<? super E> comparator;
+    private final ArrayList<E> array;
+
+    public ArraySet() {
+        this.comparator = null;
+        array = new ArrayList<>(0);
+    }
+
+    public ArraySet(Collection<? extends E> c) {
+        this(c, null);
+    }
+
+    public ArraySet(Collection<? extends E> c, Comparator<? super E> comparator) {
+        this.comparator = comparator;
+        array = new ArrayList<>(c);
+        array.sort(comparator);
+    }
+
     @Override
     public E lower(E e) {
         return null;
@@ -95,6 +113,6 @@ public class ArraySet<E> extends AbstractSet<E> implements NavigableSet<E> {
 
     @Override
     public int size() {
-        return 0;
+        return array.size();
     }
 }
