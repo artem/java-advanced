@@ -79,13 +79,13 @@ public class ArraySet<E> extends AbstractSet<E> implements NavigableSet<E> {
         return descendingSet().iterator();
     }
 
-    private int compare(E e1, E e2) {
+    private int compareElem(E e1, E e2) {
         return (comparator == null) ? ((Comparable<E>) e1).compareTo(e2) : comparator.compare(e1, e2);
     }
 
     @Override
     public NavigableSet<E> subSet(E fromElement, boolean fromInclusive, E toElement, boolean toInclusive) {
-        if (compare(fromElement, toElement) > 0) {
+        if (compareElem(fromElement, toElement) > 0) {
             throw new IllegalArgumentException(fromElement + " should be less than " + toElement);
         }
 
