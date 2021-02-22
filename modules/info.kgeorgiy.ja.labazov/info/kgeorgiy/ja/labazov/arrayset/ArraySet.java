@@ -175,4 +175,41 @@ public class ArraySet<E> extends AbstractSet<E> implements NavigableSet<E> {
     public boolean contains(Object o) {
         return Collections.binarySearch(array, (E) o, comparator) >= 0;
     }
+
+    private static final class ReversedListView<E> extends AbstractList<E> implements RandomAccess {
+        private final List<E> inner;
+
+        private ReversedListView(List<E> list) {
+            inner = list;
+        }
+
+        public static <T> List<T> reverse(List<T> list) {
+            if (list == null) {
+                return null;
+            } else if (list.getClass() == ReversedListView.class) {
+                return ((ReversedListView<T>) list).inner;
+            }
+
+            return new ReversedListView<>(list);
+        }
+
+        private int reverseIdx(int idx) {
+            return inner.size() - idx - 1;
+        }
+
+        @Override
+        public E get(int i) {
+            return inner.get(reverseIdx(i));
+        }
+
+        @Override
+        public int size() {
+            return inner.size();
+        }
+
+        @Override
+        public List<E> subList(int fromIndex, int toIndex) {
+            return new ReversedListView<>(inner.subList(reverseIdx(toIndex - 1), reverseIdx(fromIndex) + 1));
+        }
+    }
 }
