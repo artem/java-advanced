@@ -26,7 +26,7 @@ public class ArraySet<E> extends AbstractSet<E> implements NavigableSet<E> {
         this.array = list;
     }
 
-    private int searchIdx(E e, boolean inclusive, boolean direction) {
+    private int searchIdx(E e, boolean direction, boolean inclusive) {
         int pos = Collections.binarySearch(array, e, comparator);
         if (pos >= 0) {
             return pos + (inclusive ? 0 : (direction ? 1 : -1));
@@ -41,7 +41,7 @@ public class ArraySet<E> extends AbstractSet<E> implements NavigableSet<E> {
 
     @Override
     public E floor(E e) {
-        return getCheckBounds(searchIdx(e, true, false));
+        return getCheckBounds(searchIdx(e, false, true));
     }
 
     @Override
@@ -51,7 +51,7 @@ public class ArraySet<E> extends AbstractSet<E> implements NavigableSet<E> {
 
     @Override
     public E higher(E e) {
-        return getCheckBounds(searchIdx(e, false, true));
+        return getCheckBounds(searchIdx(e, true, false));
     }
 
     @Override
@@ -89,8 +89,8 @@ public class ArraySet<E> extends AbstractSet<E> implements NavigableSet<E> {
             throw new IllegalArgumentException(fromElement + " should be less than " + toElement);
         }
 
-        int posFrom = searchIdx(fromElement, fromInclusive, true);
-        int posTo = searchIdx(toElement, toInclusive, false);
+        int posFrom = searchIdx(fromElement, true, fromInclusive);
+        int posTo = searchIdx(toElement, false, toInclusive);
 
         if (posTo < posFrom) {
             return new ArraySet<>(Collections.emptyList(), comparator);
@@ -101,13 +101,13 @@ public class ArraySet<E> extends AbstractSet<E> implements NavigableSet<E> {
 
     @Override
     public NavigableSet<E> headSet(E toElement, boolean inclusive) {
-        int pos = searchIdx(toElement, inclusive, false);
+        int pos = searchIdx(toElement, false, inclusive);
         return new ArraySet<>(array.subList(0, pos + 1), comparator);
     }
 
     @Override
     public NavigableSet<E> tailSet(E fromElement, boolean inclusive) {
-        int pos = searchIdx(fromElement, inclusive, true);
+        int pos = searchIdx(fromElement, true, inclusive);
         return new ArraySet<>(array.subList(pos, size()), comparator);
     }
 
