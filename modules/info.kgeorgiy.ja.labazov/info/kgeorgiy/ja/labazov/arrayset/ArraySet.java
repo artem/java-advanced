@@ -173,7 +173,6 @@ public class ArraySet<E> extends AbstractSet<E> implements NavigableSet<E> {
 
     @Override
     public boolean contains(Object o) {
-        containsAll(null);
         return Collections.binarySearch(array, (E) o, comparator) >= 0;
     }
 }
