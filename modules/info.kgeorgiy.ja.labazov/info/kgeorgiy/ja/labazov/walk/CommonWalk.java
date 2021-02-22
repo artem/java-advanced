@@ -69,10 +69,10 @@ public abstract class CommonWalk {
 
                 processFiles(input, output);
             } catch (InvalidPathException e) {
-                System.err.printf("Invalid output filename specified: %s: %s%n", out, e.getMessage());
+                System.err.printf("Invalid output filename: '%s' (%s)%n", out, e.getMessage());
             }
         } catch (InvalidPathException e) {
-            System.err.printf("Invalid input filename specified: %s: %s%n", in, e.getMessage());
+            System.err.printf("Invalid input filename: '%s' (%s)%n", in, e.getMessage());
         }
     }
 }
