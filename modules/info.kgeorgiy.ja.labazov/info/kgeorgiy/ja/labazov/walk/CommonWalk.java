@@ -18,7 +18,7 @@ public abstract class CommonWalk {
         return false;
     }
 
-    private void processInputFile(final Path inputFilename, final Path outputFilename) {
+    private void processFiles(final Path inputFilename, final Path outputFilename) {
         try (BufferedReader reader = Files.newBufferedReader(inputFilename)) {
             try {
                 Path parent = outputFilename.getParent();
@@ -32,28 +32,32 @@ public abstract class CommonWalk {
 
             try (BufferedWriter writer = Files.newBufferedWriter(outputFilename)) {
                 WalkVisitor walkVisitor = getVisitor(writer);
-                String curEntry;
-                try {
-                    while ((curEntry = reader.readLine()) != null) {
-                        try {
-                            try {
-                                Path path = Path.of(curEntry);
-                                Files.walkFileTree(path, walkVisitor);
-                            } catch (InvalidPathException e) {
-                                walkVisitor.commitFileHash(curEntry, 0);
-                            }
-                        } catch (IOException e) {
-                            System.err.println("I/O error with output file: " + e.getMessage());
-                        }
-                    }
-                } catch (IOException e) {
-                    System.err.println("I/O error with input file: " + e.getMessage());
-                }
+                processData(reader, walkVisitor);
             } catch (IOException e) {
                 System.err.println("Unable to open output file: " + e.getMessage());
             }
         } catch (IOException e) {
             System.err.println("Unable to open input file: " + e.getMessage());
+        }
+    }
+
+    private void processData(BufferedReader reader, WalkVisitor visitor) {
+        String curEntry;
+        try {
+            while ((curEntry = reader.readLine()) != null) {
+                try {
+                    try {
+                        Path path = Path.of(curEntry);
+                        Files.walkFileTree(path, visitor);
+                    } catch (InvalidPathException e) {
+                        visitor.commitFileHash(curEntry, 0);
+                    }
+                } catch (IOException e) {
+                    System.err.println("I/O error with output file: " + e.getMessage());
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("I/O error with input file: " + e.getMessage());
         }
     }
 
@@ -63,7 +67,7 @@ public abstract class CommonWalk {
             try {
                 Path output = Path.of(out);
 
-                processInputFile(input, output);
+                processFiles(input, output);
             } catch (InvalidPathException e) {
                 System.err.printf("Invalid output filename specified: %s: %s%n", out, e.getMessage());
             }
