@@ -18,7 +18,7 @@ public class ArraySet<E> extends AbstractSet<E> implements NavigableSet<E> {
         this.comparator = comparator;
         NavigableSet<E> tmpSet = new TreeSet<>(comparator);
         tmpSet.addAll(c);
-        this.array = List.copyOf(tmpSet);
+        this.array = Collections.unmodifiableList(new ArrayList<>(tmpSet));
     }
 
     private ArraySet(List<E> list, Comparator<? super E> comparator) {
