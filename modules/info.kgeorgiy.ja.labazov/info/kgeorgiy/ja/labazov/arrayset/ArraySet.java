@@ -87,7 +87,7 @@ public class ArraySet<E> extends AbstractSet<E> implements NavigableSet<E> {
     @Override
     public NavigableSet<E> subSet(E fromElement, boolean fromInclusive, E toElement, boolean toInclusive) {
         if (compareElem(fromElement, toElement) > 0) {
-            throw new IllegalArgumentException(fromElement + " should be less than " + toElement);
+            throw new IllegalArgumentException(fromElement + " is more than " + toElement);
         }
 
         int posFrom = searchIdx(fromElement, true, fromInclusive);
