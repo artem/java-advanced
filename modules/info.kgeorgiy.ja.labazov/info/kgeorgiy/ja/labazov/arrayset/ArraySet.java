@@ -79,6 +79,7 @@ public class ArraySet<E> extends AbstractSet<E> implements NavigableSet<E> {
         return descendingSet().iterator();
     }
 
+    @SuppressWarnings("unchecked")
     private int compareElem(E e1, E e2) {
         return (comparator == null) ? ((Comparable<E>) e1).compareTo(e2) : comparator.compare(e1, e2);
     }
@@ -172,6 +173,7 @@ public class ArraySet<E> extends AbstractSet<E> implements NavigableSet<E> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public boolean contains(Object o) {
         return Collections.binarySearch(array, (E) o, comparator) >= 0;
     }
