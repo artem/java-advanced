@@ -170,7 +170,12 @@ public class SortedSetTest extends BaseTest {
     }
 
     private SortedSet<Integer> performanceSet(final int size) {
-        return set(new Random().ints().limit(size).boxed().collect(Collectors.toList()));
+        NavigableSet<Integer> kek1 = ((NavigableSet<Integer>)set(new Random().ints().limit(size).boxed().collect(Collectors.toList()))).descendingSet();
+
+        for (int i = 0; i < 69; i++) {
+            kek1 = kek1.subSet(kek1.first(), true, kek1.last(), true).descendingSet();
+        }
+        return kek1;
     }
 
     private static List<Integer> toList(final SortedSet<Integer> set) {
