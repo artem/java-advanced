@@ -36,17 +36,21 @@ public abstract class CommonWalk {
                 try {
                     while ((curEntry = reader.readLine()) != null) {
                         try {
-                            Path path = Path.of(curEntry);
-                            Files.walkFileTree(path, walkVisitor);
-                        } catch (InvalidPathException e) {
-                            walkVisitor.commitFileHash(curEntry, 0);
+                            try {
+                                Path path = Path.of(curEntry);
+                                Files.walkFileTree(path, walkVisitor);
+                            } catch (InvalidPathException e) {
+                                walkVisitor.commitFileHash(curEntry, 0);
+                            }
+                        } catch (IOException e) {
+                            System.err.println("I/O error with output file: " + e.getMessage());
                         }
                     }
                 } catch (IOException e) {
                     System.err.println("I/O error with input file: " + e.getMessage());
                 }
             } catch (IOException e) {
-                System.err.println("I/O error with output file: " + e.getMessage());
+                System.err.println("Unable to open output file: " + e.getMessage());
             }
         } catch (IOException e) {
             System.err.println("Unable to open input file: " + e.getMessage());
