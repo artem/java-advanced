@@ -11,55 +11,54 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Objects;
 
 public class WalkVisitor extends SimpleFileVisitor<Path> {
-    protected final Writer out;
+    private final byte[] buffer = new byte[4096];
+    private final Writer out;
 
-    public WalkVisitor(Writer out) {
+    public WalkVisitor(final Writer out) {
         this.out = out;
     }
 
-    private static long hashFile(Path path) {
-        long h = 0;
-        final int bits = 64;
-        final long mask = -(1L << (bits - bits / 8)); // first bits/8 MSBs
-
-        try (InputStream in = Files.newInputStream(path)) {
+    private long hashFile(final Path path) {
+        try (final InputStream in = Files.newInputStream(path)) {
+            long hash = 0;
+            final int bits = 64;
+            final long mask = (-1L << (bits - bits / 8)); // first bits/8 MSBs
             int size;
-            byte[] buffer = new byte[4096];
+
             while ((size = in.read(buffer)) >= 0) {
                 for (int i = 0; i < size; i++) {
-                    h = (h << bits / 8) + (buffer[i] & 0xff);
-                    long high = h & mask;
+                    hash = (hash << bits / 8) + (buffer[i] & 0xff);
+                    final long high = hash & mask;
                     if (high != 0) {
-                        h ^= high >> (bits * 3 / 4);
-                        h &= ~high;
+                        hash ^= high >> (bits * 3 / 4);
+                        hash &= ~high;
                     }
                 }
             }
-        } catch (IOException e) {
-            h = 0;
+            return hash;
+        } catch (final IOException e) {
+            return 0;
         }
-
-        return h;
     }
 
     @Override
-    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+    public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
         Objects.requireNonNull(file);
         Objects.requireNonNull(attrs);
 
-        long hash = WalkVisitor.hashFile(file);
+        final long hash = hashFile(file);
         commitFileHash(file.toString(), hash);
         return FileVisitResult.CONTINUE;
     }
 
     @Override
-    public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+    public FileVisitResult visitFileFailed(final Path file, final IOException exc) throws IOException {
         Objects.requireNonNull(file);
         commitFileHash(file.toString(), 0);
         return FileVisitResult.CONTINUE;
     }
 
-    public void commitFileHash(String path, long hash) throws IOException {
+    public void commitFileHash(final String path, final long hash) throws IOException {
         out.write(String.format("%016x %s%n", hash, path));
     }
 }

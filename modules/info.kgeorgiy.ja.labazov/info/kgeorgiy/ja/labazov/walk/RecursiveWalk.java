@@ -5,12 +5,12 @@ import java.io.BufferedWriter;
 public class RecursiveWalk extends CommonWalk {
     private static final CommonWalk walker = new RecursiveWalk();
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         walker.run(args);
     }
 
     @Override
-    protected WalkVisitor getVisitor(BufferedWriter out) {
+    protected WalkVisitor getVisitor(final BufferedWriter out) {
         return new WalkVisitor(out);
     }
 }
