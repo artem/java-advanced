@@ -10,14 +10,6 @@ import java.nio.file.Path;
 public abstract class CommonWalk {
     protected abstract WalkVisitor getVisitor(BufferedWriter out);
 
-    protected static boolean invalidArguments(String[] args, String className) {
-        if (args == null || args.length != 2 || args[0] == null || args[1] == null) {
-            System.err.println("Usage: java " + className + " <input> <output>");
-            return true;
-        }
-        return false;
-    }
-
     private void processFiles(final Path inputFilename, final Path outputFilename) {
         try (BufferedReader reader = Files.newBufferedReader(inputFilename)) {
             try {
@@ -61,18 +53,30 @@ public abstract class CommonWalk {
         }
     }
 
-    public void run(String in, String out) {
-        try {
-            Path input = Path.of(in);
-            try {
-                Path output = Path.of(out);
+    public void run(String[] args) {
+        if (args == null || args.length != 2 || args[0] == null || args[1] == null) {
+            System.err.println("Usage: java <input> <output>");
+            return;
+        }
+        String in = args[0];
+        String out = args[1];
 
-                processFiles(input, output);
-            } catch (InvalidPathException e) {
-                System.err.printf("Invalid output filename: '%s' (%s)%n", out, e.getMessage());
-            }
+        Path input;
+        Path output;
+        try {
+            input = Path.of(in);
         } catch (InvalidPathException e) {
             System.err.printf("Invalid input filename: '%s' (%s)%n", in, e.getMessage());
+            return;
         }
+
+        try {
+            output = Path.of(out);
+        } catch (InvalidPathException e) {
+            System.err.printf("Invalid output filename: '%s' (%s)%n", out, e.getMessage());
+            return;
+        }
+
+        processFiles(input, output);
     }
 }

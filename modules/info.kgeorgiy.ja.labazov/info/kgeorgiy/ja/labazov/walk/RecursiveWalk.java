@@ -6,11 +6,7 @@ public class RecursiveWalk extends CommonWalk {
     private static final CommonWalk walker = new RecursiveWalk();
 
     public static void main(String[] args) {
-        if (invalidArguments(args, "RecursiveWalk")) {
-            return;
-        }
-
-        walker.run(args[0], args[1]);
+        walker.run(args);
     }
 
     @Override
