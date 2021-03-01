@@ -63,21 +63,17 @@ public abstract class CommonWalk {
 
     public void run(final String[] args) {
         if (args == null || args.length != 2 || args[0] == null || args[1] == null) {
-            System.err.println("Usage: java <input> <output>");
+            System.err.println("Usage: <input> <output>");
             return;
         }
         final String in = args[0];
         final String out = args[1];
 
-        Path input;
-        Path output;
         try {
-            input = stringToPath(in, "input");
-            output = stringToPath(out, "output");
-        } catch (InvalidPathException e) {
-            return;
+            final Path input = stringToPath(in, "input");
+            final Path output = stringToPath(out, "output");
+            processFiles(input, output);
+        } catch (InvalidPathException ignored) {
         }
-
-        processFiles(input, output);
     }
 }
