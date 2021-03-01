@@ -34,7 +34,6 @@ public abstract class CommonWalk {
     private void processData(final BufferedReader reader, final WalkVisitor visitor) {
         try {
             String curEntry;
-
             while ((curEntry = reader.readLine()) != null) {
                 try {
                     try {
@@ -73,7 +72,7 @@ public abstract class CommonWalk {
             final Path input = stringToPath(in, "input");
             final Path output = stringToPath(out, "output");
             processFiles(input, output);
-        } catch (InvalidPathException ignored) {
+        } catch (final InvalidPathException ignored) {
         }
     }
 }
