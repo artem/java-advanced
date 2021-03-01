@@ -19,7 +19,6 @@ public abstract class CommonWalk {
                 }
             } catch (final IOException e) {
                 System.err.println("Unable to create parent dir for output: " + e.getMessage());
-                return;
             }
 
             try (final BufferedWriter writer = Files.newBufferedWriter(outputFilename)) {
