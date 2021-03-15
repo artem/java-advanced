@@ -39,9 +39,7 @@ public class StudentDB implements AdvancedQuery {
     private static GroupName getGroupByComp(final Collection<Student> students, final Comparator<Map.Entry<GroupName, List<Student>>> comp) {
         return students.stream()
                 .collect(Collectors.groupingBy(Student::getGroup)).entrySet().stream()
-                // :NOTE: Максимум
-                .sorted(comp)
-                .reduce((first, second) -> second)
+                .max(comp)
                 .map(Map.Entry::getKey).orElse(null);
     }
 
@@ -64,9 +62,8 @@ public class StudentDB implements AdvancedQuery {
         );
     }
 
-    // :NOTE: Student
-    private <T> List<T> getWithExtractor(final List<Student> students, final Function<? super Student, ? extends T> keyExtractor) {
-        return students.stream().map(keyExtractor).collect(Collectors.toList());
+    private <T, U> List<T> getWithExtractor(final List<U> entries, final Function<? super U, ? extends T> keyExtractor) {
+        return entries.stream().map(keyExtractor).collect(Collectors.toList());
     }
 
     @Override
@@ -99,8 +96,8 @@ public class StudentDB implements AdvancedQuery {
         return students.stream().max(Comparator.comparingInt(Student::getId)).map(Student::getFirstName).orElse("");
     }
 
-    private static List<Student> sortStudents(final Collection<Student> students, final Comparator<? super Student> comp) {
-        return students.stream().sorted(comp).collect(Collectors.toList());
+    private static <T> List<T> sortStudents(final Collection<T> entries, final Comparator<? super T> comp) {
+        return entries.stream().sorted(comp).collect(Collectors.toList());
     }
 
     @Override
@@ -140,7 +137,7 @@ public class StudentDB implements AdvancedQuery {
     @Override
     public Map<String, String> findStudentNamesByGroup(final Collection<Student> students, final GroupName group) {
         return students.stream()
-                .filter(student -> student.getGroup() == group)
+                .filter(paramMatchesField(Student::getGroup, group))
                 .collect(Collectors.toMap(
                         Student::getLastName,
                         Student::getFirstName,
