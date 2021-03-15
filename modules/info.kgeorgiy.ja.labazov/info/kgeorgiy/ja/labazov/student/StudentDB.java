@@ -7,7 +7,7 @@ import java.util.function.*;
 import java.util.stream.Collectors;
 
 public class StudentDB implements AdvancedQuery {
-    private static final Comparator<Student> compareByName = Comparator
+    private static final Comparator<Student> STUDENT_COMPARATOR = Comparator
             .comparing(Student::getLastName, Comparator.reverseOrder())
             .thenComparing(Student::getFirstName, Comparator.reverseOrder()).thenComparingInt(Student::getId);
 
@@ -24,7 +24,7 @@ public class StudentDB implements AdvancedQuery {
 
     @Override
     public List<Group> getGroupsByName(Collection<Student> students) {
-        return getGroups(students, compareByName);
+        return getGroups(students, STUDENT_COMPARATOR);
     }
 
     @Override
@@ -102,11 +102,11 @@ public class StudentDB implements AdvancedQuery {
 
     @Override
     public List<Student> sortStudentsByName(Collection<Student> students) {
-        return sortStudents(students, compareByName);
+        return sortStudents(students, STUDENT_COMPARATOR);
     }
 
     private List<Student> findStudents(Collection<Student> students, Predicate<? super Student> pred) {
-        return students.stream().filter(pred).sorted(compareByName).collect(Collectors.toList());
+        return students.stream().filter(pred).sorted(STUDENT_COMPARATOR).collect(Collectors.toList());
     }
 
     private <T> Predicate<Student> paramMatchesField(Function<Student, T> func, T param) {
