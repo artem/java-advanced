@@ -109,19 +109,23 @@ public class StudentDB implements AdvancedQuery {
         return students.stream().filter(pred).sorted(compareByName).collect(Collectors.toList());
     }
 
+    private <T> Predicate<Student> paramMatchesField(Function<Student, T> func, T param) {
+        return student -> func.apply(student).equals(param);
+    }
+
     @Override
     public List<Student> findStudentsByFirstName(Collection<Student> students, String name) {
-        return findStudents(students, student -> student.getFirstName().equals(name));
+        return findStudents(students, paramMatchesField(Student::getFirstName, name));
     }
 
     @Override
     public List<Student> findStudentsByLastName(Collection<Student> students, String name) {
-        return findStudents(students, student -> student.getLastName().equals(name));
+        return findStudents(students, paramMatchesField(Student::getLastName, name));
     }
 
     @Override
     public List<Student> findStudentsByGroup(Collection<Student> students, GroupName group) {
-        return findStudents(students, student -> student.getGroup().equals(group));
+        return findStudents(students, paramMatchesField(Student::getGroup, group));
     }
 
     @Override
