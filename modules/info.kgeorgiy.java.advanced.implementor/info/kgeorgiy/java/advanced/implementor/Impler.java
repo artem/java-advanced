@@ -1,4 +1,4 @@
-package info.kgeorgiy.ja.labazov.implementor;
+package info.kgeorgiy.java.advanced.implementor;
 
 import java.nio.file.Path;
 
@@ -20,5 +20,5 @@ public interface Impler {
      * @throws info.kgeorgiy.java.advanced.implementor.ImplerException when implementation cannot be
      * generated.
      */
-    void implement(Class<?> token, Path root);// throws ImplerException;
+    void implement(Class<?> token, Path root) throws ImplerException;
 }
