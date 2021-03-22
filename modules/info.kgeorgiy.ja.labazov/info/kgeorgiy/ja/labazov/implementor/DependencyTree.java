@@ -32,11 +32,22 @@ public class DependencyTree {
 
     public void build() {
         final Set<Signature> implementedMetPool = new HashSet<>();
-        final Set<ConstructorSig> implementedConstrPool = new HashSet<>();
+
+        final Node first = kek.get(0);
+        if (!first.token.isInterface()) {
+            final Constructor<?>[] constructors = first.token.getDeclaredConstructors();
+
+            for (Constructor<?> c : constructors) {
+                if (!Modifier.isPrivate(c.getModifiers())) {
+                    requiredConstructors.add(new ConstructorSig(c, root));
+                }
+            }
+        } else {
+            requiredConstructors.add(new ConstructorSig(new Class<?>[0], root));
+        }
 
         for (Node n : kek) {
             Method[] methods = n.token.getDeclaredMethods();
-            Constructor<?>[] constructors = n.token.getDeclaredConstructors();
 
             for (int i = 0; i <= n.interfaces.length; i++) {
                 for (Method m : methods) {
@@ -48,24 +59,14 @@ public class DependencyTree {
                         requiredMethods.add(new Signature(m));
                     }
                 }
-                for (Constructor<?> c : constructors) {
-                    if (!Modifier.isAbstract(c.getModifiers())) {
-                        implementedConstrPool.add(new ConstructorSig(c, root));
-                    }
 
-                    if (!Modifier.isPrivate(c.getModifiers())) {
-                        requiredConstructors.add(new ConstructorSig(c, root));
-                    }
-                }
                 if (i < n.interfaces.length) {
-                    methods = n.interfaces[i].getDeclaredMethods();
-                    constructors = n.interfaces[i].getDeclaredConstructors();
+                    methods = n.interfaces[i].getMethods();
                 }
             }
         }
 
         requiredMethods.removeAll(implementedMetPool);
-        requiredConstructors.removeAll(implementedConstrPool);
     }
 
     private static class Node {

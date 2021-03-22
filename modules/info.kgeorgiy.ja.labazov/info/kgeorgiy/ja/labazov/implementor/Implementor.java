@@ -4,6 +4,7 @@ import info.kgeorgiy.java.advanced.implementor.Impler;
 import info.kgeorgiy.java.advanced.implementor.ImplerException;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -24,11 +25,14 @@ public class Implementor implements Impler {
     @Override
     public void implement(Class<?> token, Path root) throws ImplerException {
         final ClassImplMeta kek = new ClassImplMeta(token);
-        Path target = root.resolve(token.getName().replace('.', '/') + "Impl.java").toAbsolutePath();
+        Path target = root.resolve(token.getPackageName().replace('.', File.separatorChar))
+                .resolve(token.getSimpleName() + "Impl.java");
 
-        try {
-            Files.createDirectories(target.getParent());
-        } catch (IOException ignored) {
+        if (target.getParent() != null) {
+            try {
+                Files.createDirectories(target.getParent());
+            } catch (IOException ignored) {
+            }
         }
 
 
@@ -50,15 +54,21 @@ public class Implementor implements Impler {
         public ClassImplMeta(Class<?> token) throws ImplerException {
             implement = token;
             name = token.getSimpleName() + "Impl";
+            if (name.equals("CompletionsImpl")) {
+                System.err.println(1);
+            }
             parentInterface = token.isInterface();
-            if (Modifier.isFinal(token.getModifiers()) || token == Enum.class) {
-                throw new ImplerException("Cannot extend final class");
+            if (Modifier.isFinal(token.getModifiers()) || token == Enum.class || Modifier.isPrivate(token.getModifiers())) {
+                throw new ImplerException("Target class is final or inaccessible");
             }
 
             DependencyTree dt = new DependencyTree(token, name);
             dt.build();
             abstractMethods = dt.getRequiredMethods();
             constructorsList = dt.getRequiredConstructors();
+            if (constructorsList.isEmpty()) {
+                throw new ImplerException("No accessible constructors in parent class");
+            }
         }
 
         @Override
@@ -73,9 +83,10 @@ public class Implementor implements Impler {
             } else {
                 sb.append(" extends ");
             }
-            sb.append(implement.getSimpleName());
+            sb.append(implement.getCanonicalName());
 
             sb.append(" {\n");
+
             for (ConstructorSig sig : constructorsList) {
                 sb.append(TABULATION);
                 sb.append(sig.toString()).append(" {\n" + TABULATION);
@@ -100,11 +111,9 @@ public class Implementor implements Impler {
 
             sb.append('}');
 
+            //System.err.println(sb.toString());
+
             return sb.toString();
         }
-
-
-
-
     }
 }

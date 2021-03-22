@@ -11,15 +11,20 @@ public class Signature {
     private final Class<?>[] throwTypes;
     public final String defaultRet; //TODO fix access
 
-    public Signature(Method method) {
+    Signature(Method method) {
         name = method.getName();
         returnType = method.getReturnType();
         arguments = method.getParameterTypes();
         throwTypes = method.getExceptionTypes();
+
         if (returnType.isPrimitive()) {
             defaultRet = defaultValue(method);
         } else {
-            defaultRet = String.valueOf(method.getDefaultValue());
+            if (method.getDefaultValue() instanceof String) {
+                defaultRet = '"' + (String)method.getDefaultValue() + '"';
+            } else {
+                defaultRet = String.valueOf(method.getDefaultValue());
+            }
         }
     }
 

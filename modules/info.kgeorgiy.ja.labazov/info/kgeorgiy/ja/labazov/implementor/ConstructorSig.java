@@ -1,16 +1,39 @@
 package info.kgeorgiy.ja.labazov.implementor;
 
 import java.lang.reflect.Constructor;
+import java.util.Arrays;
+import java.util.Objects;
 
 public class ConstructorSig {
     private final String name;
     public final Class<?>[] arguments; //todo permissions
     private final Class<?>[] throwTypes;
 
-    public ConstructorSig(Constructor<?> method, String name) {
+    ConstructorSig(Constructor<?> method, String name) {
         this.name = name;
         arguments = method.getParameterTypes();
         throwTypes = method.getExceptionTypes();
+    }
+
+    ConstructorSig(Class<?>[] arguments, String name) {
+        this.name = name;
+        this.arguments = arguments;
+        this.throwTypes = new Class<?>[0];
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ConstructorSig that = (ConstructorSig) o;
+        return name.equals(that.name) && Arrays.equals(arguments, that.arguments);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(name);
+        result = 31 * result + Arrays.hashCode(arguments);
+        return result;
     }
 
     @Override
