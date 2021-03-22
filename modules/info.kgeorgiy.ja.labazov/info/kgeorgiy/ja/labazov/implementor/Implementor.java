@@ -110,11 +110,11 @@ public class Implementor implements Impler {
                 sb.append('\n');
             }
             for (Signature sig : abstractMethods) {
-                sb.append(TABULATION).append("@Override").append('\n');
+                sb.append(TABULATION + "@Override" + '\n');
                 sb.append(TABULATION);
-                sb.append(sig.toString()).append(" {\n" + TABULATION);
+                sb.append(sig.toString()).append(" {" + "\n" + TABULATION);
                 sb.append(TABULATION);
-                sb.append(TABULATION).append("return ").append(sig.getDefaultRet()).append(";\n" + TABULATION + "}");
+                sb.append(TABULATION + "return ").append(sig.getDefaultRet()).append(";\n" + TABULATION + "}");
                 sb.append('\n');
             }
 
