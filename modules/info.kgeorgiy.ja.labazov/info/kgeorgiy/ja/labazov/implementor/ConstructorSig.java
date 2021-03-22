@@ -5,8 +5,9 @@ import java.util.Arrays;
 import java.util.Objects;
 
 public class ConstructorSig {
+    private static final Class<?>[] DUMMY = new Class<?>[0];
     private final String name;
-    public final Class<?>[] arguments; //todo permissions
+    private final Class<?>[] arguments;
     private final Class<?>[] throwTypes;
 
     ConstructorSig(Constructor<?> method, String name) {
@@ -15,10 +16,14 @@ public class ConstructorSig {
         throwTypes = method.getExceptionTypes();
     }
 
-    ConstructorSig(Class<?>[] arguments, String name) {
+    ConstructorSig(String name) {
         this.name = name;
-        this.arguments = arguments;
-        this.throwTypes = new Class<?>[0];
+        this.arguments = DUMMY;
+        this.throwTypes = DUMMY;
+    }
+
+    public Class<?>[] getArguments() {
+        return arguments;
     }
 
     @Override

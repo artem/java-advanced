@@ -9,7 +9,7 @@ public class Signature {
     private final Class<?> returnType;
     private final Class<?>[] arguments;
     private final Class<?>[] throwTypes;
-    public final String defaultRet; //TODO fix access
+    private final String defaultRet; //TODO fix access
 
     Signature(Method method) {
         name = method.getName();
@@ -26,6 +26,10 @@ public class Signature {
                 defaultRet = String.valueOf(method.getDefaultValue());
             }
         }
+    }
+
+    public String getDefaultRet() {
+        return defaultRet;
     }
 
     private String defaultValue(Method method) {

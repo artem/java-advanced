@@ -6,27 +6,37 @@ import info.kgeorgiy.java.advanced.implementor.ImplerException;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
-import java.util.RandomAccess;
 
-//TODO extension of final classes
 public class Implementor implements Impler {
-    public static void main(String[] args) throws ImplerException {
-        new Implementor().implement(RandomAccess.class, Path.of("."));
+    public static void main(String[] args) {
+        if (args.length != 1) {
+            System.err.println("Usage: <class name>");
+            return;
+        }
+
+        try {
+            new Implementor().implement(ClassLoader.getSystemClassLoader().loadClass(args[0]), Path.of("."));
+        } catch (ClassNotFoundException e) {
+            System.err.println("Target class not found");
+        } catch (ImplerException e) {
+            System.err.println("Failed to generate implementation");
+            e.printStackTrace();
+        }
+    }
+
+    private static String getImplName(Class<?> token) {
+        return token.getSimpleName() + "Impl";
     }
 
     @Override
     public void implement(Class<?> token, Path root) throws ImplerException {
-        final ClassImplMeta kek = new ClassImplMeta(token);
+        final ClassImplMeta classImplMeta = new ClassImplMeta(token);
         Path target = root.resolve(token.getPackageName().replace('.', File.separatorChar))
-                .resolve(token.getSimpleName() + "Impl.java");
+                .resolve(getImplName(token) + "java");
 
         if (target.getParent() != null) {
             try {
@@ -35,28 +45,25 @@ public class Implementor implements Impler {
             }
         }
 
-
         try (BufferedWriter out = Files.newBufferedWriter(target)) {
-            out.write(kek.toString());
+            out.write(classImplMeta.toString());
         } catch (IOException e) {
             throw new ImplerException("IO error");
         }
     }
 
     private static class ClassImplMeta {
+        private static final String TABULATION = "    ";
         private final Class<?> implement;
         private final boolean parentInterface;
         private final Collection<Signature> abstractMethods;
         private final Collection<ConstructorSig> constructorsList;
         private final String name;
-        private static final String TABULATION = "    ";
 
         public ClassImplMeta(Class<?> token) throws ImplerException {
             implement = token;
-            name = token.getSimpleName() + "Impl";
-            if (name.equals("CompletionsImpl")) {
-                System.err.println(1);
-            }
+            name = getImplName(token);
+
             parentInterface = token.isInterface();
             if (Modifier.isFinal(token.getModifiers()) || token == Enum.class || Modifier.isPrivate(token.getModifiers())) {
                 throw new ImplerException("Target class is final or inaccessible");
@@ -92,9 +99,10 @@ public class Implementor implements Impler {
                 sb.append(sig.toString()).append(" {\n" + TABULATION);
                 sb.append(TABULATION);
                 sb.append(TABULATION).append("super(");
-                if (sig.arguments.length != 0) {
+                final Class<?>[] args = sig.getArguments();
+                if (args.length != 0) {
                     sb.append("arg0");
-                    for (int i = 1; i < sig.arguments.length; i++) {
+                    for (int i = 1; i < args.length; i++) {
                         sb.append(", arg").append(i);
                     }
                 }
@@ -105,13 +113,11 @@ public class Implementor implements Impler {
                 sb.append(TABULATION);
                 sb.append(sig.toString()).append(" {\n" + TABULATION);
                 sb.append(TABULATION);
-                sb.append(TABULATION).append("return ").append(sig.defaultRet).append(";\n" + TABULATION + "}");
+                sb.append(TABULATION).append("return ").append(sig.getDefaultRet()).append(";\n" + TABULATION + "}");
                 sb.append('\n');
             }
 
             sb.append('}');
-
-            //System.err.println(sb.toString());
 
             return sb.toString();
         }
