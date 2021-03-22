@@ -43,7 +43,7 @@ public class Implementor implements Impler {
         private final Class<?> implement;
         private final boolean parentInterface;
         private final Collection<Signature> abstractMethods;
-        private final List<ConstructorSig> constructorsList = new ArrayList<>();
+        private final Collection<ConstructorSig> constructorsList;
         private final String name;
         private static final String TABULATION = "    ";
 
@@ -55,14 +55,10 @@ public class Implementor implements Impler {
                 throw new ImplerException("Cannot extend final class");
             }
 
-            DependencyTree dt = new DependencyTree(token);
+            DependencyTree dt = new DependencyTree(token, name);
             dt.build();
             abstractMethods = dt.getRequiredMethods();
-
-            Constructor<?>[] constructors = token.getConstructors();
-            for (Constructor<?> c : constructors) {
-                constructorsList.add(new ConstructorSig(c, name));
-            }
+            constructorsList = dt.getRequiredConstructors();
         }
 
         @Override
@@ -109,39 +105,6 @@ public class Implementor implements Impler {
 
 
 
-        private static class ConstructorSig {
-            private final String name;
-            private final Class<?>[] arguments;
-            private final Class<?>[] throwTypes;
 
-            private ConstructorSig(Constructor<?> method, String name) {
-                this.name = name;
-                arguments = method.getParameterTypes();
-                throwTypes = method.getExceptionTypes();
-            }
-
-            @Override
-            public String toString() {
-                StringBuilder sb = new StringBuilder();
-                sb.append("public ");
-                sb.append(' ').append(name).append('(');
-                if (arguments.length != 0) {
-                    sb.append(arguments[0].getCanonicalName()).append(" arg0");
-                    for (int i = 1; i < arguments.length; i++) {
-                        sb.append(", ").append(arguments[i].getCanonicalName()).append(" arg").append(i);
-                    }
-                }
-                sb.append(')');
-
-                if (throwTypes.length != 0) {
-                    sb.append(" throws ").append(throwTypes[0].getCanonicalName());
-                    for (int i = 1; i < throwTypes.length; i++) {
-                        sb.append(", ").append(throwTypes[i].getCanonicalName());
-                    }
-                }
-
-                return sb.toString();
-            }
-        }
     }
 }
