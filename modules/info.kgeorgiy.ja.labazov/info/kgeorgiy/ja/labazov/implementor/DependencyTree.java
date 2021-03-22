@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Set;
 
 public class DependencyTree {
-    private final List<Node> kek = new ArrayList<>(); //todo rename
+    private final List<Node> layers = new ArrayList<>();
     private final Set<Signature> requiredMethods = new HashSet<>();
     private final Set<ConstructorSig> requiredConstructors = new HashSet<>();
     private final String root;
@@ -17,7 +17,7 @@ public class DependencyTree {
     public DependencyTree(Class<?> token, String root) {
         this.root = root;
         while (token != null) {
-            kek.add(new Node(token));
+            layers.add(new Node(token));
             token = token.getSuperclass();
         }
     }
@@ -31,7 +31,7 @@ public class DependencyTree {
     }
 
     public void build() {
-        final Node first = kek.get(0);
+        final Node first = layers.get(0);
         if (!first.token.isInterface()) {
             final Constructor<?>[] constructors = first.token.getDeclaredConstructors();
 
@@ -44,9 +44,10 @@ public class DependencyTree {
             requiredConstructors.add(new ConstructorSig(root));
         }
 
-        for (int j = kek.size() - 1; j >= 0; j--) {
-            final Node n = kek.get(j);
-            final Set<Signature> implementedMetPool = new HashSet<>();
+        final Set<Signature> implementedMetPool = new HashSet<>();
+
+        for (int j = layers.size() - 1; j >= 0; j--) {
+            final Node n = layers.get(j);
             Method[] methods = n.token.getDeclaredMethods();
 
             for (int i = 0; i <= n.interfaces.length; i++) {
@@ -65,6 +66,7 @@ public class DependencyTree {
                 }
             }
             requiredMethods.removeAll(implementedMetPool);
+            implementedMetPool.clear();
         }
     }
 

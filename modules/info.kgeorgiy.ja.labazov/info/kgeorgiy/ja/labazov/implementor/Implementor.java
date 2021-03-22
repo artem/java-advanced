@@ -36,7 +36,7 @@ public class Implementor implements Impler {
     public void implement(Class<?> token, Path root) throws ImplerException {
         final ClassImplMeta classImplMeta = new ClassImplMeta(token);
         Path target = root.resolve(token.getPackageName().replace('.', File.separatorChar))
-                .resolve(getImplName(token) + "java");
+                .resolve(getImplName(token) + ".java");
 
         if (target.getParent() != null) {
             try {
