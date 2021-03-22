@@ -11,6 +11,7 @@ public class StudentDB implements AdvancedQuery {
             .comparing(Student::getLastName, Comparator.reverseOrder())
             .thenComparing(Student::getFirstName, Comparator.reverseOrder())
             .thenComparingInt(Student::getId);
+    private static final Comparator<Student> ID_COMPARATOR = Comparator.comparingInt(Student::getId);
 
     private static String getFullName(final Student student) {
         return student.getFirstName() + " " + student.getLastName();
@@ -32,8 +33,7 @@ public class StudentDB implements AdvancedQuery {
 
     @Override
     public List<Group> getGroupsById(final Collection<Student> students) {
-        // :NOTE: Не нужно Comparator.comparing(Student::getId)
-        return getGroups(students, Comparator.comparing(Student::getId));
+        return getGroups(students, ID_COMPARATOR);
     }
 
     private static GroupName getGroupByComp(final Collection<Student> students, final Comparator<Map.Entry<GroupName, List<Student>>> comp) {
@@ -50,7 +50,6 @@ public class StudentDB implements AdvancedQuery {
 
     @Override
     public GroupName getLargestGroup(final Collection<Student> students) {
-        // :NOTE: Память
         return getGroupByComp(students, mapEntryValueComp(entry -> entry.getValue().size())
                 .thenComparing(Map.Entry::getKey));
     }
@@ -93,7 +92,7 @@ public class StudentDB implements AdvancedQuery {
 
     @Override
     public String getMaxStudentFirstName(final List<Student> students) {
-        return students.stream().max(Comparator.comparingInt(Student::getId)).map(Student::getFirstName).orElse("");
+        return students.stream().max(ID_COMPARATOR).map(Student::getFirstName).orElse("");
     }
 
     private static <T> List<T> sortStudents(final Collection<T> entries, final Comparator<? super T> comp) {
@@ -102,7 +101,7 @@ public class StudentDB implements AdvancedQuery {
 
     @Override
     public List<Student> sortStudentsById(final Collection<Student> students) {
-        return sortStudents(students, Comparator.comparingInt(Student::getId));
+        return sortStudents(students, ID_COMPARATOR);
     }
 
     @Override
@@ -110,28 +109,31 @@ public class StudentDB implements AdvancedQuery {
         return sortStudents(students, STUDENT_COMPARATOR);
     }
 
-    private static List<Student> findStudents(final Collection<Student> students, final Predicate<? super Student> pred) {
-        return students.stream().filter(pred).sorted(STUDENT_COMPARATOR).collect(Collectors.toList());
+    private static <T> List<Student> findStudents(final Collection<Student> students,
+                                                  final Function<Student, T> func, final T param) {
+        return students.stream()
+                .filter(paramMatchesField(func, param))
+                .sorted(STUDENT_COMPARATOR)
+                .collect(Collectors.toList());
     }
 
     private static <T> Predicate<Student> paramMatchesField(final Function<Student, T> func, final T param) {
         return student -> func.apply(student).equals(param);
     }
 
-    // :NOTE: Дубли
     @Override
     public List<Student> findStudentsByFirstName(final Collection<Student> students, final String name) {
-        return findStudents(students, paramMatchesField(Student::getFirstName, name));
+        return findStudents(students, Student::getFirstName, name);
     }
 
     @Override
     public List<Student> findStudentsByLastName(final Collection<Student> students, final String name) {
-        return findStudents(students, paramMatchesField(Student::getLastName, name));
+        return findStudents(students, Student::getLastName, name);
     }
 
     @Override
     public List<Student> findStudentsByGroup(final Collection<Student> students, final GroupName group) {
-        return findStudents(students, paramMatchesField(Student::getGroup, group));
+        return findStudents(students, Student::getGroup, group);
     }
 
     @Override
@@ -152,7 +154,6 @@ public class StudentDB implements AdvancedQuery {
                         Student::getFirstName,
                         Collectors.mapping(
                                 Student::getGroup,
-                                // :NOTE: Память
                                 Collectors.collectingAndThen(Collectors.toSet(), Set::size)
                         )))
                 .entrySet().stream()
