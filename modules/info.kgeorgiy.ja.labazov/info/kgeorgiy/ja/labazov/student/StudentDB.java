@@ -43,25 +43,27 @@ public class StudentDB implements AdvancedQuery {
                 .map(Map.Entry::getKey).orElse(null);
     }
 
-    private Comparator<Map.Entry<GroupName, List<Student>>> mapEntryValueComp(final ToIntFunction<Map.Entry<GroupName,
+    private static Comparator<Map.Entry<GroupName, List<Student>>> mapEntryValueComp(final ToIntFunction<Map.Entry<GroupName,
             List<Student>>> mapEntryIntExtractor) {
         return Comparator.comparingInt(mapEntryIntExtractor);
     }
 
     @Override
     public GroupName getLargestGroup(final Collection<Student> students) {
+        // :NOTE: count
         return getGroupByComp(students, mapEntryValueComp(entry -> entry.getValue().size())
                 .thenComparing(Map.Entry::getKey));
     }
 
     @Override
     public GroupName getLargestGroupFirstName(final Collection<Student> students) {
+        // :NOTE: count
         return getGroupByComp(students, mapEntryValueComp(entry -> getDistinctFirstNames(entry.getValue()).size())
                 .thenComparing(Map.Entry::getKey, Comparator.reverseOrder())
         );
     }
 
-    private <T, U> List<T> getWithExtractor(final List<U> entries, final Function<? super U, ? extends T> keyExtractor) {
+    private static <T, U> List<T> getWithExtractor(final List<U> entries, final Function<? super U, ? extends T> keyExtractor) {
         return entries.stream().map(keyExtractor).collect(Collectors.toList());
     }
 
