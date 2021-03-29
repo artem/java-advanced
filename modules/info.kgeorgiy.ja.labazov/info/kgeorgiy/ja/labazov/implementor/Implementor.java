@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Random;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
 
@@ -122,7 +123,7 @@ public class Implementor implements JarImpler {
         final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         Assert.assertNotNull("Could not find java compiler, include tools.jar to classpath", compiler);
         final String classpath = root + File.pathSeparator + getClassPath();
-        final String[] args = new String[]{getFile(root, clazz, ".java").toString(), "-cp", classpath, "-encoding UTF-8"};
+        final String[] args = new String[]{getFile(root, clazz, ".java").toString(), "-cp", classpath, "-encoding", "UTF-8"};
         final int exitCode = compiler.run(null, null, null, args);
         Assert.assertEquals("Compiler exit code", 0, exitCode);
     }
@@ -183,9 +184,17 @@ public class Implementor implements JarImpler {
      */
     @Override
     public void implementJar(Class<?> token, Path jarFile) throws ImplerException {
+        try {
+            if (jarFile.getParent() != null) {
+                Files.createDirectories(jarFile.getParent());
+            }
+        } catch (IOException e) {
+            System.err.println("Couldn't create directories for output");
+        }
         Path tmpDir;
         try {
-            tmpDir = Files.createTempDirectory("JarImplementor-");
+            tmpDir = Path.of("JarImplementor-" + new Random().nextInt());
+            Files.createDirectories(tmpDir);
         } catch (IOException e) {
             throw new ImplerException("Unable to create temp directory", e);
         }

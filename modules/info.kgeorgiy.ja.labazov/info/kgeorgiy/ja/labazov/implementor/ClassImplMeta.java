@@ -51,7 +51,9 @@ class ClassImplMeta {
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
-        sb.append("package ").append(implement.getPackageName()).append(";\n");
+        if (!implement.getPackageName().isEmpty()) {
+            sb.append("package ").append(implement.getPackageName()).append(";\n");
+        }
         sb.append("public class ").append(name);
 
         if (parentInterface) {
