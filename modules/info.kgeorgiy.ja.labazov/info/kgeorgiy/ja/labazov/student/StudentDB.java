@@ -1,9 +1,16 @@
 package info.kgeorgiy.ja.labazov.student;
 
-import info.kgeorgiy.java.advanced.student.*;
+import info.kgeorgiy.java.advanced.student.AdvancedQuery;
+import info.kgeorgiy.java.advanced.student.Group;
+import info.kgeorgiy.java.advanced.student.GroupName;
+import info.kgeorgiy.java.advanced.student.Student;
 
 import java.util.*;
-import java.util.function.*;
+import java.util.Map.Entry;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 public class StudentDB implements AdvancedQuery {
@@ -36,31 +43,24 @@ public class StudentDB implements AdvancedQuery {
         return getGroups(students, ID_COMPARATOR);
     }
 
-    private static GroupName getGroupByComp(final Collection<Student> students, final Comparator<Map.Entry<GroupName, List<Student>>> comp) {
+    private static <R extends Comparable<? super R>> GroupName getGroup(final Collection<Student> students, Collector<Student, ?, R> col,
+                                             Comparator<GroupName> comp) {
         return students.stream()
-                .collect(Collectors.groupingBy(Student::getGroup)).entrySet().stream()
-                .max(comp)
-                .map(Map.Entry::getKey).orElse(null);
-    }
-
-    private static Comparator<Map.Entry<GroupName, List<Student>>> mapEntryValueComp(final ToIntFunction<Map.Entry<GroupName,
-            List<Student>>> mapEntryIntExtractor) {
-        return Comparator.comparingInt(mapEntryIntExtractor);
+                .collect(Collectors.groupingBy(Student::getGroup, col)).entrySet().stream()
+                .max(Entry.<GroupName, R>comparingByValue().thenComparing(Entry::getKey, comp))
+                .map(Entry::getKey).orElse(null);
     }
 
     @Override
     public GroupName getLargestGroup(final Collection<Student> students) {
-        // :NOTE: count
-        return getGroupByComp(students, mapEntryValueComp(entry -> entry.getValue().size())
-                .thenComparing(Map.Entry::getKey));
+        return getGroup(students, Collectors.counting(), Comparator.naturalOrder());
     }
 
     @Override
     public GroupName getLargestGroupFirstName(final Collection<Student> students) {
-        // :NOTE: count
-        return getGroupByComp(students, mapEntryValueComp(entry -> getDistinctFirstNames(entry.getValue()).size())
-                .thenComparing(Map.Entry::getKey, Comparator.reverseOrder())
-        );
+        return StudentDB.<Integer>getGroup(students, // Explicit type argument is required for successful type inference
+                Collectors.mapping(Student::getFirstName, Collectors.collectingAndThen(Collectors.toSet(), Set::size)),
+                Comparator.reverseOrder());
     }
 
     private static <T, U> List<T> getWithExtractor(final List<U> entries, final Function<? super U, ? extends T> keyExtractor) {
@@ -159,8 +159,8 @@ public class StudentDB implements AdvancedQuery {
                                 Collectors.collectingAndThen(Collectors.toSet(), Set::size)
                         )))
                 .entrySet().stream()
-                .max(Map.Entry.<String, Integer>comparingByValue().thenComparing(Map.Entry::getKey))
-                .map(Map.Entry::getKey).orElse("");
+                .max(Entry.<String, Integer>comparingByValue().thenComparing(Entry::getKey))
+                .map(Entry::getKey).orElse("");
     }
 
     private static <T> List<T> getByIndices(final Collection<Student> students, final int[] indices, final Function<Student, T> fun) {
