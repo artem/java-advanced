@@ -16,9 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.jar.Attributes;
 import java.util.jar.JarOutputStream;
-import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 
 public class Implementor implements JarImpler {
@@ -82,7 +80,7 @@ public class Implementor implements JarImpler {
         final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         Assert.assertNotNull("Could not find java compiler, include tools.jar to classpath", compiler);
         final String classpath = root + File.pathSeparator + getClassPath();
-        final String[] args = new String[]{file, "-cp", classpath};
+        final String[] args = new String[]{file, "-cp", classpath, "-encoding UTF-8"};
         final int exitCode = compiler.run(null, null, null, args);
         Assert.assertEquals("Compiler exit code", 0, exitCode);
     }
