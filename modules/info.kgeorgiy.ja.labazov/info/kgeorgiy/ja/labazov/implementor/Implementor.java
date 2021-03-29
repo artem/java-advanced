@@ -67,8 +67,8 @@ public class Implementor implements JarImpler {
         return token.getPackageName() + "." + getSimpleImplName(token);
     }
 
-    private static Path getFile(final Path root, final Class<?> clazz) {
-        return root.resolve(getImplName(clazz).replace(".", File.separator) + ".java").toAbsolutePath();
+    private static Path getFile(final Path root, final Class<?> clazz, String suffix) {
+        return root.resolve(getImplName(clazz).replace(".", File.separator) + suffix).toAbsolutePath();
     }
 
     private static String getClassPath() {
@@ -89,7 +89,7 @@ public class Implementor implements JarImpler {
     }
 
     private static void compile(final Path root, final Class<?> clazz) {
-        compileFiles(root, getFile(root, clazz).toString());
+        compileFiles(root, getFile(root, clazz, ".java").toString());
     }
 
     private static void clean(final Path root) throws IOException {
@@ -101,7 +101,7 @@ public class Implementor implements JarImpler {
     @Override
     public void implement(Class<?> token, Path root) throws ImplerException {
         final ClassImplMeta classImplMeta = new ClassImplMeta(token);
-        Path target = getFile(root, token);
+        Path target = getFile(root, token, ".java");
 
         if (target.getParent() != null) {
             try {
@@ -115,12 +115,6 @@ public class Implementor implements JarImpler {
         } catch (IOException e) {
             throw new ImplerException("IO error", e);
         }
-    }
-
-    private static Path getFilePath(Class<?> token, Path root, String tail) { //todo STOLEN
-        //todo perm
-        return root.resolve(token.getPackageName().replace('.', File.separatorChar))
-                .resolve((token.getSimpleName() + "Impl") + tail);
     }
 
     @Override
@@ -140,8 +134,8 @@ public class Implementor implements JarImpler {
             Attributes attributes = manifest.getMainAttributes();
             attributes.put(Attributes.Name.MANIFEST_VERSION, "1.0");
             try (JarOutputStream writer = new JarOutputStream(Files.newOutputStream(jarFile), manifest)) {
-                writer.putNextEntry(new ZipEntry(token.getPackageName().replace('.', '/')+ '/' + token.getSimpleName() + "Impl.class")); //TODO wtf
-                Files.copy(getFilePath(token, tmpDir, ".class"), writer);
+                writer.putNextEntry(new ZipEntry(getImplName(token).replace(".", File.separator) + ".class")); //TODO copy-pasta
+                Files.copy(getFile(tmpDir, token, ".class"), writer);
             } catch (IOException e) {
                 throw new ImplerException("Unable to write to JAR file", e);
             }
