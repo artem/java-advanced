@@ -18,6 +18,7 @@ public class StudentDB implements AdvancedQuery {
             .comparing(Student::getLastName, Comparator.reverseOrder())
             .thenComparing(Student::getFirstName, Comparator.reverseOrder())
             .thenComparingInt(Student::getId);
+
     private static final Comparator<Student> ID_COMPARATOR = Comparator.comparingInt(Student::getId);
 
     private static String getFullName(final Student student) {
@@ -43,12 +44,17 @@ public class StudentDB implements AdvancedQuery {
         return getGroups(students, ID_COMPARATOR);
     }
 
-    private static <R extends Comparable<? super R>, T> T getGroup(final Collection<Student> students, Collector<Student, ?, R> col,
-                                                                                                 Comparator<? super T> comp, Function<Student, T> extr, T def) {
+    private static <R extends Comparable<? super R>, T> T getGroup(
+            final Collection<Student> students, final Collector<Student, ?, R> col,
+            final Comparator<? super T> comp,
+            final Function<Student, T> extr,
+            final T def
+    ) {
         return students.stream()
                 .collect(Collectors.groupingBy(extr, col)).entrySet().stream()
                 .max(Entry.<T, R>comparingByValue().thenComparing(Entry::getKey, comp))
-                .map(Entry::getKey).orElse(def);
+                .map(Entry::getKey)
+                .orElse(def);
     }
 
     @Override
@@ -56,7 +62,7 @@ public class StudentDB implements AdvancedQuery {
         return getGroup(students, Collectors.counting(), Comparator.naturalOrder(), Student::getGroup, null);
     }
 
-    private static <T> Collector<T, ?, Integer> distinctAmountByExtr(Function<T, ?> extr) {
+    private static <T> Collector<T, ?, Integer> distinctAmountByExtr(final Function<T, ?> extr) {
         return Collectors.mapping(extr, Collectors.collectingAndThen(Collectors.toSet(), Set::size));
     }
 
@@ -161,7 +167,7 @@ public class StudentDB implements AdvancedQuery {
     }
 
     private static <T> List<T> getByIndices(final Collection<Student> students, final int[] indices, final Function<Student, T> fun) {
-        return Arrays.stream(indices).mapToObj(new ArrayList<>(students)::get).map(fun).collect(Collectors.toList());
+        return Arrays.stream(indices).mapToObj(List.copyOf(students)::get).map(fun).collect(Collectors.toList());
     }
 
     @Override
