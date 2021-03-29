@@ -37,7 +37,6 @@ public class Implementor implements JarImpler {
     };
 
     public static void main(String[] args) {
-        args = new String[] {JarImpler.class.getCanonicalName(), "fun.jar"}; //todo remove me
         if (args.length == 0) {
             System.err.println("Usage: <class name> [output file]");
             return;
@@ -130,10 +129,7 @@ public class Implementor implements JarImpler {
             implement(token, tmpDir);
             compile(tmpDir, token);
 
-            Manifest manifest = new Manifest();
-            Attributes attributes = manifest.getMainAttributes();
-            attributes.put(Attributes.Name.MANIFEST_VERSION, "1.0");
-            try (JarOutputStream writer = new JarOutputStream(Files.newOutputStream(jarFile), manifest)) {
+            try (JarOutputStream writer = new JarOutputStream(Files.newOutputStream(jarFile))) {
                 writer.putNextEntry(new ZipEntry(getImplName(token).replace(".", File.separator) + ".class")); //TODO copy-pasta
                 Files.copy(getFile(tmpDir, token, ".class"), writer);
             } catch (IOException e) {
