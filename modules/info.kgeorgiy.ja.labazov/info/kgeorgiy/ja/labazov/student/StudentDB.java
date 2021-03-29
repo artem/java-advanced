@@ -43,24 +43,28 @@ public class StudentDB implements AdvancedQuery {
         return getGroups(students, ID_COMPARATOR);
     }
 
-    private static <R extends Comparable<? super R>> GroupName getGroup(final Collection<Student> students, Collector<Student, ?, R> col,
-                                             Comparator<GroupName> comp) {
+    private static <R extends Comparable<? super R>, T> T getGroup(final Collection<Student> students, Collector<Student, ?, R> col,
+                                                                                                 Comparator<? super T> comp, Function<Student, T> extr, T def) {
         return students.stream()
-                .collect(Collectors.groupingBy(Student::getGroup, col)).entrySet().stream()
-                .max(Entry.<GroupName, R>comparingByValue().thenComparing(Entry::getKey, comp))
-                .map(Entry::getKey).orElse(null);
+                .collect(Collectors.groupingBy(extr, col)).entrySet().stream()
+                .max(Entry.<T, R>comparingByValue().thenComparing(Entry::getKey, comp))
+                .map(Entry::getKey).orElse(def);
     }
 
     @Override
     public GroupName getLargestGroup(final Collection<Student> students) {
-        return getGroup(students, Collectors.counting(), Comparator.naturalOrder());
+        return getGroup(students, Collectors.counting(), Comparator.naturalOrder(), Student::getGroup, null);
+    }
+
+    private static <T> Collector<T, ?, Integer> distinctAmountByExtr(Function<T, ?> extr) {
+        return Collectors.mapping(extr, Collectors.collectingAndThen(Collectors.toSet(), Set::size));
     }
 
     @Override
     public GroupName getLargestGroupFirstName(final Collection<Student> students) {
-        return StudentDB.<Integer>getGroup(students, // Explicit type argument is required for successful type inference
-                Collectors.mapping(Student::getFirstName, Collectors.collectingAndThen(Collectors.toSet(), Set::size)),
-                Comparator.reverseOrder());
+        // Explicit type arguments are required for successful type inference
+        return StudentDB.<Integer, GroupName>getGroup(students, distinctAmountByExtr(Student::getFirstName),
+                Comparator.reverseOrder(), Student::getGroup, null);
     }
 
     private static <T, U> List<T> getWithExtractor(final List<U> entries, final Function<? super U, ? extends T> keyExtractor) {
@@ -151,16 +155,9 @@ public class StudentDB implements AdvancedQuery {
 
     @Override
     public String getMostPopularName(final Collection<Student> students) {
-        return students.stream()
-                .collect(Collectors.groupingBy(
-                        Student::getFirstName,
-                        Collectors.mapping(
-                                Student::getGroup,
-                                Collectors.collectingAndThen(Collectors.toSet(), Set::size)
-                        )))
-                .entrySet().stream()
-                .max(Entry.<String, Integer>comparingByValue().thenComparing(Entry::getKey))
-                .map(Entry::getKey).orElse("");
+        // Explicit type arguments are required for successful type inference
+        return StudentDB.<Integer, String>getGroup(students, distinctAmountByExtr(Student::getGroup),
+                Comparator.naturalOrder(), Student::getFirstName, "");
     }
 
     private static <T> List<T> getByIndices(final Collection<Student> students, final int[] indices, final Function<Student, T> fun) {
