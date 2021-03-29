@@ -4,13 +4,22 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Objects;
 
+/**
+ * This class represents unique method signature
+ *
+ * @author Artem Labazov
+ */
 public class Signature {
     private final String name;
     private final Class<?> returnType;
     private final Class<?>[] arguments;
     private final Class<?>[] throwTypes;
-    private final String defaultRet; //TODO fix access
+    private final String defaultRet;
 
+    /**
+     * Constructs a signature representation
+     * @param method Method to be represented
+     */
     Signature(Method method) {
         name = method.getName();
         returnType = method.getReturnType();
@@ -28,10 +37,19 @@ public class Signature {
         }
     }
 
+    /**
+     * Returns default return value of the method.
+     * @return Method's default value.
+     */
     public String getDefaultRet() {
         return defaultRet;
     }
 
+    /**
+     * Returns default return value of the method.
+     * @param method Method to retrieve return value from.
+     * @return String default value representation.
+     */
     private String defaultValue(Method method) {
         Object defaultValue = method.getDefaultValue();
 
@@ -47,6 +65,10 @@ public class Signature {
         }
     }
 
+    /**
+     * Converts method representation into a source code string.
+     * @return Source code representation
+     */
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -70,6 +92,11 @@ public class Signature {
         return sb.toString();
     }
 
+    /**
+     * Checks equality of methods.
+     * @param o Other object to be compared with
+     * @return <code>true</code> if methods are equal, <code>false</code> otherwise.
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -78,6 +105,10 @@ public class Signature {
         return name.equals(signature.name) && returnType.equals(signature.returnType) && Arrays.equals(arguments, signature.arguments);
     }
 
+    /**
+     * Generates hashcode.
+     * @return Integer hashcode.
+     */
     @Override
     public int hashCode() {
         int result = Objects.hash(name, returnType);

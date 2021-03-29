@@ -1,10 +1,17 @@
 package info.kgeorgiy.ja.labazov.implementor;
 
 import info.kgeorgiy.java.advanced.implementor.ImplerException;
+import info.kgeorgiy.java.advanced.implementor.JarImpler;
 
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 
+/**
+ * This class represents meta information, required to generate
+ * a class' implementation.
+ *
+ * @author Artem Labazov
+ */
 class ClassImplMeta {
     private static final String TABULATION = "    ";
     private final Class<?> implement;
@@ -13,6 +20,11 @@ class ClassImplMeta {
     private final Collection<ConstructorSig> constructorsList;
     private final String name;
 
+    /**
+     * Constructs meta information for the implementation of a given class
+     * @param token Source class to be implemented.
+     * @throws ImplerException Class cannot be implemented.
+     */
     public ClassImplMeta(Class<?> token) throws ImplerException {
         implement = token;
         name = Implementor.getSimpleImplName(token);
@@ -31,6 +43,10 @@ class ClassImplMeta {
         }
     }
 
+    /**
+     * Produces class' <code>.java</code> implementation
+     * @return Plain text implementation
+     */
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

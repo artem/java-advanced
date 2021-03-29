@@ -4,28 +4,51 @@ import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.Objects;
 
+/**
+ * This class represents unique constructor signature
+ *
+ * @author Artem Labazov
+ */
 public class ConstructorSig {
     private static final Class<?>[] DUMMY = new Class<?>[0];
     private final String name;
     private final Class<?>[] arguments;
     private final Class<?>[] throwTypes;
 
-    ConstructorSig(Constructor<?> method, String name) {
+    /**
+     * Constructs a signature representation
+     * @param constructor Constructor to be represented
+     * @param name Name of the class the constructor belongs to
+     */
+    ConstructorSig(Constructor<?> constructor, String name) {
         this.name = name;
-        arguments = method.getParameterTypes();
-        throwTypes = method.getExceptionTypes();
+        arguments = constructor.getParameterTypes();
+        throwTypes = constructor.getExceptionTypes();
     }
 
+    /**
+     * Constructs a constructor with empty signature
+     * @param name Name of the class the constructor belongs to
+     */
     ConstructorSig(String name) {
         this.name = name;
         this.arguments = DUMMY;
         this.throwTypes = DUMMY;
     }
 
+    /**
+     * Returns an array of constructor's arguments
+     * @return Constructor's arguments
+     */
     public Class<?>[] getArguments() {
         return arguments;
     }
 
+    /**
+     * Checks equality of constructors.
+     * @param o Other object to be compared with
+     * @return <code>true</code> if constructors are equal, <code>false</code> otherwise.
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -34,6 +57,10 @@ public class ConstructorSig {
         return name.equals(that.name) && Arrays.equals(arguments, that.arguments);
     }
 
+    /**
+     * Generates hashcode.
+     * @return Integer hashcode.
+     */
     @Override
     public int hashCode() {
         int result = Objects.hash(name);
@@ -41,6 +68,10 @@ public class ConstructorSig {
         return result;
     }
 
+    /**
+     * Converts constructor representation into a source code string.
+     * @return Source code representation
+     */
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
