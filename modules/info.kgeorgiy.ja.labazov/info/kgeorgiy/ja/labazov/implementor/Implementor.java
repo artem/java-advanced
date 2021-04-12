@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.security.CodeSource;
 import java.util.Random;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
@@ -111,7 +112,12 @@ public class Implementor implements JarImpler {
      */
     private static String getClassPath(final Class<?> clazz) {
         try {
-            return Path.of(clazz.getProtectionDomain().getCodeSource().getLocation().toURI()).toString();
+            final CodeSource cs = clazz.getProtectionDomain().getCodeSource();
+            if (cs != null) {
+                return Path.of(cs.getLocation().toURI()).toString();
+            } else {
+                return "";
+            }
         } catch (final URISyntaxException e) {
             throw new AssertionError(e);
         }
@@ -196,6 +202,7 @@ public class Implementor implements JarImpler {
      */
     @Override
     public void implementJar(Class<?> token, Path jarFile) throws ImplerException {
+        jarFile = jarFile.toAbsolutePath();
         if (jarFile.getParent() == null) {
             throw new ImplerException("Invalid output file path: " + jarFile);
         }
