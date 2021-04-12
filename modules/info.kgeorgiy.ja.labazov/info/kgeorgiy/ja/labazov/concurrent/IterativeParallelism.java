@@ -1,6 +1,6 @@
 package info.kgeorgiy.ja.labazov.concurrent;
 
-import info.kgeorgiy.java.advanced.concurrent.ListIP;
+import info.kgeorgiy.java.advanced.concurrent.AdvancedIP;
 
 import java.util.*;
 import java.util.function.Function;
@@ -8,12 +8,13 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class IterativeParallelism implements ListIP {
-    private <T, R> List<R> parallel(int threads, final List<? extends T> values,
-                                    final Function<? super Stream<? extends T>, ? extends R> collector) throws InterruptedException {
+public class IterativeParallelism implements AdvancedIP {
+    private <T, R> R parallel(int threads, final List<T> values,
+                                    final Function<Stream<T>, R> collector,
+                                    final Function<Stream<R>, R> combiner) throws InterruptedException {
         threads = Math.max(1, Math.min(values.size(), threads));
 
-        final List<List<? extends T>> chunks = new ArrayList<>();
+        final List<List<T>> chunks = new ArrayList<>();
         final int chunkSize = values.size() / threads;
         int extra = values.size() % threads;
 
@@ -58,44 +59,37 @@ public class IterativeParallelism implements ListIP {
             throw firstex;
         }
 
-        return result;
+        return combiner.apply(result.stream());
+    }
+
+    private <T> T parallel(int threads, final List<T> values, final Function<Stream<T>, T> collector) throws InterruptedException {
+        return parallel(threads, values, collector, collector);
     }
 
     @Override
     public String join(int threads, List<?> values) throws InterruptedException {
-        final Function<Stream<?>, Stream<String>> pred = stream -> stream.map(Object::toString);
-
-        final List<Stream<String>> res = parallel(threads, values, pred);
-
-        return res.stream().flatMap(s -> s).collect(Collectors.joining());
+        return parallel(threads, values,
+                s -> s.map(Object::toString).collect(Collectors.joining()),
+                s -> s.collect(Collectors.joining()));
     }
 
     @Override
     public <T> List<T> filter(int threads, List<? extends T> values, Predicate<? super T> predicate) throws InterruptedException {
-        final Function<Stream<? extends T>, Stream<? extends T>> pred = stream -> stream.filter(predicate);
-
-        final List<Stream<? extends T>> res = parallel(threads, values, pred);
-
-
-        return res.stream().flatMap(s -> s).collect(Collectors.toList());
+        return parallel(threads, values,
+                s -> s.filter(predicate).collect(Collectors.toList()),
+                s -> s.flatMap(Collection::stream).collect(Collectors.toList()));
     }
 
     @Override
     public <T, U> List<U> map(int threads, List<? extends T> values, Function<? super T, ? extends U> f) throws InterruptedException {
-        final Function<Stream<? extends T>, Stream<U>> map = stream -> stream.map(f);
-
-        final List<Stream<U>> res = parallel(threads, values, map);
-
-        return res.stream().flatMap(s -> s).collect(Collectors.toList());
+        return parallel(threads, values,
+                s -> s.map(f).collect(Collectors.toList()),
+                s -> s.flatMap(Collection::stream).collect(Collectors.toList()));
     }
 
     @Override
     public <T> T maximum(int threads, List<? extends T> values, Comparator<? super T> comparator) throws InterruptedException {
-        final Function<Stream<? extends T>, ? extends T> maxx = stream -> stream.max(comparator).orElse(null);
-
-        final List<T> res = parallel(threads, values, maxx);
-
-        return maxx.apply(res.stream());
+        return parallel(threads, values, s -> s.max(comparator).orElse(null));
     }
 
     @Override
@@ -105,19 +99,29 @@ public class IterativeParallelism implements ListIP {
 
     @Override
     public <T> boolean all(int threads, List<? extends T> values, Predicate<? super T> predicate) throws InterruptedException {
-        final Function<Stream<? extends T>, Boolean> all = stream -> stream.allMatch(predicate);
-
-        final List<Boolean> res = parallel(threads, values, all);
-
-        return res.stream().allMatch(e -> e);
+        return parallel(threads, values,
+                s -> s.allMatch(predicate),
+                s -> s.allMatch(Boolean::booleanValue));
     }
 
     @Override
     public <T> boolean any(int threads, List<? extends T> values, Predicate<? super T> predicate) throws InterruptedException {
-        final Function<Stream<? extends T>, Boolean> any = stream -> stream.anyMatch(predicate);
+        return !all(threads, values, predicate.negate());
+    }
 
-        final List<Boolean> res = parallel(threads, values, any);
+    private <T> T applyFun(final Stream<T> stream, final Monoid<T> monoid) {
+        return stream.reduce(monoid.getIdentity(), monoid.getOperator());
+    }
 
-        return res.stream().anyMatch(e -> e);
+    @Override
+    public <T, R> R mapReduce(int threads, List<T> values, Function<T, R> function, Monoid<R> monoid) throws InterruptedException {
+        return parallel(threads, values,
+                s -> applyFun(s.map(function), monoid),
+                s -> applyFun(s, monoid));
+    }
+
+    @Override
+    public <T> T reduce(int threads, List<T> values, Monoid<T> monoid) throws InterruptedException {
+        return mapReduce(threads, values, Function.identity(), monoid);
     }
 }
