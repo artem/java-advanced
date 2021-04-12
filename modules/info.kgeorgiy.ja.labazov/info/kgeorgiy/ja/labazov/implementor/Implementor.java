@@ -1,9 +1,7 @@
 package info.kgeorgiy.ja.labazov.implementor;
 
-import info.kgeorgiy.java.advanced.implementor.BaseImplementorTest;
 import info.kgeorgiy.java.advanced.implementor.ImplerException;
 import info.kgeorgiy.java.advanced.implementor.JarImpler;
-import org.junit.Assert;
 
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
@@ -47,6 +45,7 @@ public class Implementor implements JarImpler {
 
     /**
      * Program's main entry point.
+     *
      * @param args Array of program arguments
      *             args[0]: target class name
      *             args[1] (Optional): output .jar file
@@ -75,6 +74,7 @@ public class Implementor implements JarImpler {
 
     /**
      * Returns simple class name for class implementation.
+     *
      * @param token Token of the source class.
      * @return Name of the implementation class.
      */
@@ -84,6 +84,7 @@ public class Implementor implements JarImpler {
 
     /**
      * Returns full class name for class implementation.
+     *
      * @param token Token of the source class.
      * @return Name of the implementation class.
      */
@@ -93,8 +94,9 @@ public class Implementor implements JarImpler {
 
     /**
      * Generates file path for a given class token.
-     * @param root Root path to be resolved from.
-     * @param clazz Class token.
+     *
+     * @param root   Root path to be resolved from.
+     * @param clazz  Class token.
      * @param suffix Resulting filename suffix.
      * @return Path of the required file.
      */
@@ -104,11 +106,12 @@ public class Implementor implements JarImpler {
 
     /**
      * Returns system classpath.
+     *
      * @return Classpath as String.
      */
-    private static String getClassPath() {
+    private static String getClassPath(final Class<?> clazz) {
         try {
-            return Path.of(BaseImplementorTest.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toString();
+            return Path.of(clazz.getProtectionDomain().getCodeSource().getLocation().toURI()).toString();
         } catch (final URISyntaxException e) {
             throw new AssertionError(e);
         }
@@ -116,20 +119,30 @@ public class Implementor implements JarImpler {
 
     /**
      * Compiles implementation of a class with a given token
-     * @param root Output root path
+     *
+     * @param root  Output root path
      * @param clazz Source class token
      */
-    private static void compile(final Path root, final Class<?> clazz) {
+    private static void compile(final Path root, final Class<?> clazz) throws ImplerException {
         final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        Assert.assertNotNull("Could not find java compiler, include tools.jar to classpath", compiler);
-        final String classpath = root + File.pathSeparator + getClassPath();
-        final String[] args = new String[]{getFile(root, clazz, ".java").toString(), "-cp", classpath, "-encoding", "UTF-8"};
+        if (compiler == null) {
+            throw new ImplerException("Could not find java compiler, include tools.jar to classpath");
+        }
+        final String classpath = getClassPath(clazz) + File.pathSeparator + root + File.pathSeparator + System.getProperty("java.class.path");
+        final String[] args = new String[]{
+                "--patch-module", clazz.getModule().getName() + "=src",
+                "-cp", classpath,
+                getFile(root, clazz, ".java").toString()
+        };
         final int exitCode = compiler.run(null, null, null, args);
-        Assert.assertEquals("Compiler exit code", 0, exitCode);
+        if (exitCode != 0) {
+            throw new ImplerException("Compiler exit code is not 0 but " + exitCode);
+        }
     }
 
     /**
      * Removes directory recursively.
+     *
      * @param root Directory to be removed.
      * @throws IOException I/O error has occurred.
      */
@@ -147,11 +160,10 @@ public class Implementor implements JarImpler {
      * {@code root} directory and have correct file name. For example, the implementation of the
      * interface {@link java.util.List} should go to {@code $root/java/util/ListImpl.java}
      *
-     *
      * @param token type token to create implementation for.
-     * @param root root directory.
+     * @param root  root directory.
      * @throws info.kgeorgiy.java.advanced.implementor.ImplerException when implementation cannot be
-     * generated.
+     *                                                                 generated.
      */
     @Override
     public void implement(Class<?> token, Path root) throws ImplerException {
@@ -178,22 +190,24 @@ public class Implementor implements JarImpler {
      * Generated class classes name should be same as classes name of the type token with <var>Impl</var> suffix
      * added.
      *
-     * @param token type token to create implementation for.
+     * @param token   type token to create implementation for.
      * @param jarFile target <var>.jar</var> file.
      * @throws ImplerException when implementation cannot be generated.
      */
     @Override
     public void implementJar(Class<?> token, Path jarFile) throws ImplerException {
+        if (jarFile.getParent() == null) {
+            throw new ImplerException("Invalid output file path: " + jarFile);
+        }
+
         try {
-            if (jarFile.getParent() != null) {
-                Files.createDirectories(jarFile.getParent());
-            }
+            Files.createDirectories(jarFile.getParent());
         } catch (IOException e) {
             System.err.println("Couldn't create directories for output");
         }
-        Path tmpDir;
+
+        Path tmpDir = jarFile.getParent().resolve("JarImplementor" + new Random().nextInt());
         try {
-            tmpDir = Path.of("JarImplementor-" + new Random().nextInt());
             Files.createDirectories(tmpDir);
         } catch (IOException e) {
             throw new ImplerException("Unable to create temp directory", e);
@@ -204,7 +218,7 @@ public class Implementor implements JarImpler {
             compile(tmpDir, token);
 
             try (JarOutputStream writer = new JarOutputStream(Files.newOutputStream(jarFile))) {
-                writer.putNextEntry(new ZipEntry(getImplName(token).replace(".", File.separator) + ".class"));
+                writer.putNextEntry(new ZipEntry(getImplName(token).replace(".", "/") + ".class"));
                 Files.copy(getFile(tmpDir, token, ".class"), writer);
             } catch (IOException e) {
                 throw new ImplerException("Unable to create a .jar file", e);

@@ -44,6 +44,23 @@ class ClassImplMeta {
     }
 
     /**
+     * Converts string to an ASCII encoding
+     * @param str Target string.
+     * @return Escaped string.
+     */
+    private static String toAscii(final String str) {
+        final StringBuilder sb = new StringBuilder();
+        for (char c : str.toCharArray()) {
+            if (c >= 128) {
+                sb.append(String.format("\\u%04X", (int)c));
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
      * Produces class' <code>.java</code> implementation
      * @return Plain text implementation
      */
@@ -90,6 +107,6 @@ class ClassImplMeta {
 
         sb.append('}');
 
-        return sb.toString();
+        return toAscii(sb.toString());
     }
 }
