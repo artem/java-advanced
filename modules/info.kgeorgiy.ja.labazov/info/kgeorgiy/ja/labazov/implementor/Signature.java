@@ -10,10 +10,29 @@ import java.util.Objects;
  * @author Artem Labazov
  */
 public class Signature {
+    /**
+     * Name of the method.
+     */
     private final String name;
+
+    /**
+     * Token of the type which represented method returns.
+     */
     private final Class<?> returnType;
+
+    /**
+     * Array of the types represented method takes as arguments.
+     */
     private final Class<?>[] arguments;
+
+    /**
+     * List of the types represented method throws.
+     */
     private final Class<?>[] throwTypes;
+
+    /**
+     * Default value that represented method should return.
+     */
     private final String defaultRet;
 
     /**

@@ -13,11 +13,34 @@ import java.util.Collection;
  * @author Artem Labazov
  */
 class ClassImplMeta {
+    /**
+     * Constant for 4 spaces.
+     */
     private static final String TABULATION = "    ";
+
+    /**
+     * Token of the class being implemented.
+     */
     private final Class<?> implement;
+
+    /**
+     * True whether we are implementing an interface.
+     */
     private final boolean parentInterface;
+
+    /**
+     * List of methods to be generated.
+     */
     private final Collection<Signature> abstractMethods;
+
+    /**
+     * List of constructors to be generated.
+     */
     private final Collection<ConstructorSig> constructorsList;
+
+    /**
+     * Name of the implementation class.
+     */
     private final String name;
 
     /**

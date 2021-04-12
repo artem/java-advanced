@@ -15,6 +15,9 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.CodeSource;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
@@ -134,13 +137,20 @@ public class Implementor implements JarImpler {
         if (compiler == null) {
             throw new ImplerException("Could not find java compiler, include tools.jar to classpath");
         }
-        final String classpath = getClassPath(clazz) + File.pathSeparator + root + File.pathSeparator + System.getProperty("java.class.path");
-        final String[] args = new String[]{
-                "--patch-module", clazz.getModule().getName() + "=src",
-                "-cp", classpath,
-                getFile(root, clazz, ".java").toString()
-        };
-        final int exitCode = compiler.run(null, null, null, args);
+        String classpath = root + File.pathSeparator + System.getProperty("java.class.path");
+        final String tokenClasspath = getClassPath(clazz);
+        final List<String> args = new ArrayList<>();
+        if (clazz.getModule().isNamed() && tokenClasspath.isEmpty()) {
+            args.add("--patch-module");
+            args.add(clazz.getModule().getName() + "=" + root);
+        } else {
+            classpath += File.pathSeparator + tokenClasspath;
+        }
+
+        Collections.addAll(args, "-cp", classpath,
+                getFile(root, clazz, ".java").toString());
+
+        final int exitCode = compiler.run(null, null, null, args.toArray(new String[0]));
         if (exitCode != 0) {
             throw new ImplerException("Compiler exit code is not 0 but " + exitCode);
         }

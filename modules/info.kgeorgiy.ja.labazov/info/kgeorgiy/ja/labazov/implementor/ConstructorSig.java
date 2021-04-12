@@ -10,9 +10,24 @@ import java.util.Objects;
  * @author Artem Labazov
  */
 public class ConstructorSig {
+    /**
+     * Dummy constant for constructors with no arguments.
+     */
     private static final Class<?>[] DUMMY = new Class<?>[0];
+
+    /**
+     * Name of the class this constructor is for.
+     */
     private final String name;
+
+    /**
+     * An array of the arguments this constructor takes.
+     */
     private final Class<?>[] arguments;
+
+    /**
+     * An array of exception types this constructor throws.
+     */
     private final Class<?>[] throwTypes;
 
     /**

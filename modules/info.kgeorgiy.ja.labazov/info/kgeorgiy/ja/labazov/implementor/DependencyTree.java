@@ -17,9 +17,24 @@ import java.util.Set;
  * @author Artem Labazov
  */
 public class DependencyTree {
+    /**
+     * Class dependency tree split into layers.
+     */
     private final List<Node> layers = new ArrayList<>();
+
+    /**
+     * Set of the methods to be generated.
+     */
     private final Set<Signature> requiredMethods = new HashSet<>();
+
+    /**
+     * Set of the constructors to be generated.
+     */
     private final Set<ConstructorSig> requiredConstructors = new HashSet<>();
+
+    /**
+     * Name of the implementation class.
+     */
     private final String root;
 
     /**
