@@ -5,6 +5,7 @@ module info.kgeorgiy.ja.labazov {
     requires transitive info.kgeorgiy.java.advanced.student;
     requires transitive info.kgeorgiy.java.advanced.implementor;
     requires transitive info.kgeorgiy.java.advanced.concurrent;
+    requires transitive info.kgeorgiy.java.advanced.mapper;
     requires java.compiler;
 
     exports info.kgeorgiy.ja.labazov.walk;

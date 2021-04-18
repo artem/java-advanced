@@ -1,6 +1,7 @@
 package info.kgeorgiy.ja.labazov.concurrent;
 
 import info.kgeorgiy.java.advanced.concurrent.AdvancedIP;
+import info.kgeorgiy.java.advanced.mapper.ParallelMapper;
 
 import java.util.*;
 import java.util.function.Function;
@@ -9,6 +10,12 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class IterativeParallelism implements AdvancedIP {
+    public IterativeParallelism() {
+
+    }
+    public IterativeParallelism(ParallelMapper mapper) {
+
+    }
     private <T, R> R parallel(
             int threads,
             final List<T> values,

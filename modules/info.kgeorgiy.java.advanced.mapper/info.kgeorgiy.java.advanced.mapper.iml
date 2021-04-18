@@ -7,11 +7,8 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="info.kgeorgiy.java.advanced.concurrent" />
     <orderEntry type="library" name="lib" level="project" />
     <orderEntry type="module" module-name="info.kgeorgiy.java.advanced.base" />
-    <orderEntry type="module" module-name="info.kgeorgiy.java.advanced.student" />
-    <orderEntry type="module" module-name="info.kgeorgiy.java.advanced.implementor" />
-    <orderEntry type="module" module-name="info.kgeorgiy.java.advanced.concurrent" />
-    <orderEntry type="module" module-name="info.kgeorgiy.java.advanced.mapper" />
   </component>
 </module>

@@ -6,6 +6,7 @@
       <module fileurl="file://$PROJECT_DIR$/modules/info.kgeorgiy.java.advanced.base/info.kgeorgiy.java.advanced.base.iml" filepath="$PROJECT_DIR$/modules/info.kgeorgiy.java.advanced.base/info.kgeorgiy.java.advanced.base.iml" />
       <module fileurl="file://$PROJECT_DIR$/modules/info.kgeorgiy.java.advanced.concurrent/info.kgeorgiy.java.advanced.concurrent.iml" filepath="$PROJECT_DIR$/modules/info.kgeorgiy.java.advanced.concurrent/info.kgeorgiy.java.advanced.concurrent.iml" />
       <module fileurl="file://$PROJECT_DIR$/modules/info.kgeorgiy.java.advanced.implementor/info.kgeorgiy.java.advanced.implementor.iml" filepath="$PROJECT_DIR$/modules/info.kgeorgiy.java.advanced.implementor/info.kgeorgiy.java.advanced.implementor.iml" />
+      <module fileurl="file://$PROJECT_DIR$/modules/info.kgeorgiy.java.advanced.mapper/info.kgeorgiy.java.advanced.mapper.iml" filepath="$PROJECT_DIR$/modules/info.kgeorgiy.java.advanced.mapper/info.kgeorgiy.java.advanced.mapper.iml" />
       <module fileurl="file://$PROJECT_DIR$/modules/info.kgeorgiy.java.advanced.student/info.kgeorgiy.java.advanced.student.iml" filepath="$PROJECT_DIR$/modules/info.kgeorgiy.java.advanced.student/info.kgeorgiy.java.advanced.student.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/java-advanced-2021.iml" filepath="$PROJECT_DIR$/.idea/java-advanced-2021.iml" />
     </modules>
