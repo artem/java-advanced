@@ -20,10 +20,9 @@ public class ParallelMapperImpl implements ParallelMapper {
                 try {
                     handleRequest();
                 } catch (InterruptedException e) {
-
+                    Thread.currentThread().interrupt();
                 }
-            }
-            );
+            });
             workers.add(th);
             th.start();
         }

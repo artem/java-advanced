@@ -61,12 +61,15 @@ public class IterativeParallelism implements AdvancedIP {
          */
         final List<InterruptedException> errors = new LinkedList<>();
 
-        // :NOTE: Окончание работы
         for (final Thread thread : workers) {
             try {
                 thread.join();
             } catch (final InterruptedException e) {
                 errors.add(e);
+                for (final Thread th : workers) {
+                    th.interrupt();
+                }
+                break;
             }
         }
 
@@ -111,11 +114,11 @@ public class IterativeParallelism implements AdvancedIP {
                 s -> s.collect(Collectors.joining()));
     }
 
-    private <T, U> List<U> streamOperation(final int threads, final List<T> values,
-                                           final Function<Stream<T>, Stream<? extends U>> collector) throws InterruptedException {
-        return this.parallel(threads, values,
-                collector,
-                s -> s.flatMap(o -> o).collect(Collectors.toList()));
+    private <T, U> List<U> streamOperation(final int threads,
+                                           final List<T> values,
+                                           final Function<Stream<T>, Stream<? extends U>> collector
+    ) throws InterruptedException {
+        return this.parallel(threads, values, collector, s -> s.flatMap(o -> o).collect(Collectors.toList()));
     }
 
     @Override
