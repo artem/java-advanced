@@ -118,7 +118,7 @@ public class IterativeParallelism implements AdvancedIP {
                                            final List<T> values,
                                            final Function<Stream<T>, Stream<? extends U>> collector
     ) throws InterruptedException {
-        return this.parallel(threads, values, collector, s -> s.flatMap(o -> o).collect(Collectors.toList()));
+        return this.parallel(threads, values, collector, s -> s.flatMap(Function.identity()).collect(Collectors.toList()));
     }
 
     @Override
