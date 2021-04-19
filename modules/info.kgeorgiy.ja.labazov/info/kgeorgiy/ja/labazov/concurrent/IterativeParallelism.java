@@ -106,9 +106,9 @@ public class IterativeParallelism implements AdvancedIP {
 
     @Override
     public String join(final int threads, final List<?> values) throws InterruptedException {
-        return mapReduce(threads, values,
-                o -> new StringBuilder(o.toString()),
-                new Monoid<>(new StringBuilder(), StringBuilder::append)).toString();
+        return parallel(threads, values,
+                s -> s.map(Objects::toString).collect(Collectors.joining()),
+                s -> s.collect(Collectors.joining()));
     }
 
     private <T, U> List<U> streamOperation(final int threads, final List<T> values,

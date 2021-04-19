@@ -9,24 +9,20 @@ import java.util.Queue;
 import java.util.function.Function;
 
 public class ParallelMapperImpl implements ParallelMapper {
-    private final int threads;
-
     private final List<Thread> workers;
-    private final Queue<Thread> queue = new ArrayDeque<>();
+    private final Queue<Runnable> queue = new ArrayDeque<>();
 
     public ParallelMapperImpl(int threads) {
-        this.threads = threads;
         workers = new ArrayList<>(threads);
 
         for (int i = 0; i < threads; i++) {
-            Thread th = new Thread(
-                    () -> {
-                        try {
-                            handleRequest();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace(); //TODO
-                        }
-                    }
+            Thread th = new Thread(() -> {
+                try {
+                    handleRequest();
+                } catch (InterruptedException e) {
+
+                }
+            }
             );
             workers.add(th);
             th.start();
@@ -36,32 +32,44 @@ public class ParallelMapperImpl implements ParallelMapper {
 
     private void handleRequest() throws InterruptedException {
         while (!Thread.interrupted()) {
-            Thread got;
+            Runnable got;
             synchronized (queue) {
                 while (queue.isEmpty()) {
                     queue.wait();
                 }
                 got = queue.poll();
             }
-            got.start();
-            got.join();
+            got.run();
         }
     }
 
     @Override
     public <T, R> List<R> map(Function<? super T, ? extends R> f, List<? extends T> args) throws InterruptedException {
-        List<R> ans = new ArrayList<>();
+        TaskResult<R> res = new TaskResult<>(args.size());
 
-        for (T arg : args) {
-            ans.add(f.apply(arg));
+        for (int i = 0; i < args.size(); i++) {
+            final int pos = i;
+            Runnable task = () -> res.set(pos, f.apply(args.get(pos)));
+            synchronized (queue) {
+                queue.add(task);
+                queue.notify();
+            }
         }
 
-        ans.wait();
-        return ans;
+        return res.get();
     }
 
     @Override
     public void close() {
+        for (Thread worker : workers) {
+            worker.interrupt();
+        }
 
+        for (Thread worker : workers) {
+            try {
+                worker.join();
+            } catch (InterruptedException ignored) {
+            }
+        }
     }
 }
