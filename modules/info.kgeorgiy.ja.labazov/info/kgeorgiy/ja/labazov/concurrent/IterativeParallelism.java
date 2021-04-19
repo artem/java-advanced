@@ -60,16 +60,18 @@ public class IterativeParallelism implements AdvancedIP {
             try {
                 workers.get(i).join();
             } catch (final InterruptedException e) {
+                final Exception error = new InterruptedException("Interrupted while joining");
+                error.addSuppressed(e);
                 for (int j = i; j < workers.size(); j++) {
                     workers.get(j).interrupt();
                 }
 
-                for (int j = i; j < workers.size(); j++) {
+                for (int j = i; j < workers.size(); ) {
                     try {
                         workers.get(j).join();
+                        j++;
                     } catch (final InterruptedException ex) {
-                        e.addSuppressed(ex);
-                        j--;
+                        error.addSuppressed(ex);
                     }
                 }
 
@@ -112,7 +114,7 @@ public class IterativeParallelism implements AdvancedIP {
                                            final List<T> values,
                                            final Function<Stream<T>, Stream<? extends U>> collector
     ) throws InterruptedException {
-        return this.parallel(threads, values, collector, s -> s.flatMap(Function.identity()).collect(Collectors.toList()));
+        return this.parallel(threads, values, collector, s -> s.flatMap(o -> o).collect(Collectors.toList()));
     }
 
     @Override
