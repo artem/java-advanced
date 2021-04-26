@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 
 public class IterativeParallelism implements AdvancedIP {
     private final ParallelMapper parallelMapper;
+
     public IterativeParallelism() {
 
         parallelMapper = null;
@@ -60,7 +61,7 @@ public class IterativeParallelism implements AdvancedIP {
             try {
                 workers.get(i).join();
             } catch (final InterruptedException e) {
-                final Exception error = new InterruptedException("Interrupted while joining");
+                final Exception error = new InterruptedException("Interrupted while joining workers");
                 error.addSuppressed(e);
                 for (int j = i; j < workers.size(); j++) {
                     workers.get(j).interrupt();

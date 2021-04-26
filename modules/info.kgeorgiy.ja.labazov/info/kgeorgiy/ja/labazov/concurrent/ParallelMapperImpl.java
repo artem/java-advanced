@@ -64,9 +64,10 @@ public class ParallelMapperImpl implements ParallelMapper {
             worker.interrupt();
         }
 
-        for (Thread worker : workers) {
+        for (int i = 0; i < workers.size(); ) {
             try {
-                worker.join();
+                workers.get(i).join();
+                i++;
             } catch (InterruptedException ignored) {
             }
         }
