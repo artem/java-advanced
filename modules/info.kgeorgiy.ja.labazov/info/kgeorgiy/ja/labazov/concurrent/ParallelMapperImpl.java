@@ -23,8 +23,7 @@ public class ParallelMapperImpl implements ParallelMapper {
                     Thread.currentThread().interrupt();
                 }
             });
-            workers.add(th);
-            th.start();
+            ParallelUtils.addAndStartThread(th, workers);
         }
 
     }

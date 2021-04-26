@@ -53,8 +53,7 @@ public class IterativeParallelism implements AdvancedIP {
         for (int i = 0; i < threads; ++i) {
             final int pos = i;
             final Thread thread = new Thread(() -> result.set(pos, collector.apply(chunks.get(pos))));
-            workers.add(thread);
-            thread.start();
+            ParallelUtils.addAndStartThread(thread, workers);
         }
 
         for (int i = 0; i < workers.size(); i++) {
