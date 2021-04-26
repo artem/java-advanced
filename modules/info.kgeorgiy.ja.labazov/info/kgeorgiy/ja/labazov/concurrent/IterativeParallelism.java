@@ -3,7 +3,6 @@ package info.kgeorgiy.ja.labazov.concurrent;
 import info.kgeorgiy.java.advanced.concurrent.AdvancedIP;
 import info.kgeorgiy.java.advanced.mapper.ParallelMapper;
 
-import java.net.URLClassLoader;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -14,11 +13,10 @@ public class IterativeParallelism implements AdvancedIP {
     private final ParallelMapper parallelMapper;
 
     public IterativeParallelism() {
-
-        parallelMapper = null;
+        this(null);
     }
 
-    public IterativeParallelism(ParallelMapper mapper) {
+    public IterativeParallelism(final ParallelMapper mapper) {
         parallelMapper = mapper;
     }
 
@@ -28,40 +26,43 @@ public class IterativeParallelism implements AdvancedIP {
             final Function<Stream<T>, U> collector,
             final Function<Stream<U>, R> combiner
     ) throws InterruptedException {
+        // :NOTE: Лишние потоки
         threads = Math.max(1, Math.min(values.size(), threads));
 
         final List<Stream<T>> chunks = chunks(threads, values);
-        final List<U> result;
-
-        if (parallelMapper != null) {
-            result = parallelMapper.map(collector, chunks);
-        } else {
-            result = iterativeMapper(threads, collector, chunks);
-        }
-
+        final List<U> result = parallelMapper != null
+                ? parallelMapper.map(collector, chunks)
+                : map(collector, chunks);
         return combiner.apply(result.stream());
     }
 
-    private <T, R> List<R> iterativeMapper(int threads, Function<Stream<T>, R> collector, List<Stream<T>> chunks) throws InterruptedException {
-        final List<R> result = new ArrayList<>(threads);
-        final List<Thread> workers = new ArrayList<>(threads);
+    private static <T, R> List<R> map(final Function<T, R> f, final List<T> args) throws InterruptedException {
+        final List<R> result = new ArrayList<>(args.size());
+        final List<Thread> workers = new ArrayList<>(args.size());
 
-        for (int i = 0; i < threads; i++) {
+        // :NOTE: nCopies
+        for (int i = 0; i < args.size(); i++) {
             result.add(null);
         }
 
-        for (int i = 0; i < threads; ++i) {
+        // :NOTE: IntStream
+        for (int i = 0; i < args.size(); ++i) {
             final int pos = i;
-            final Thread thread = new Thread(() -> result.set(pos, collector.apply(chunks.get(pos))));
+            final Thread thread = new Thread(() -> result.set(pos, f.apply(args.get(pos))));
+            // :NOTE: :(
             ParallelUtils.addAndStartThread(thread, workers);
         }
 
+        joinAll(workers);
+
+        return result;
+    }
+
+    private static void joinAll(final List<Thread> workers) throws InterruptedException {
         for (int i = 0; i < workers.size(); i++) {
             try {
                 workers.get(i).join();
-            } catch (final InterruptedException e) {
-                final Exception error = new InterruptedException("Interrupted while joining workers");
-                error.addSuppressed(e);
+            } catch (final InterruptedException error) {
                 for (int j = i; j < workers.size(); j++) {
                     workers.get(j).interrupt();
                 }
@@ -75,25 +76,18 @@ public class IterativeParallelism implements AdvancedIP {
                     }
                 }
 
-                throw e;
+                throw error;
             }
         }
-
-        return result;
     }
 
-    private <T> List<Stream<T>> chunks(final int threads, final List<T> values) {
+    private static <T> List<Stream<T>> chunks(final int threads, final List<T> values) {
         final List<Stream<T>> chunks = new ArrayList<>();
         final int chunkSize = values.size() / threads;
-        int extra = values.size() % threads;
+        final int extra = values.size() % threads;
 
-        for (int i = 0, start = 0; i < threads; ++i) {
-            int offset = chunkSize;
-            if (extra != 0) {
-                offset++;
-                extra--;
-            }
-
+        for (int i = 0, start = 0; i < threads; i++) {
+            final int offset = chunkSize + (i < extra ? 1 : 0);
             chunks.add(values.subList(start, start += offset).stream());
         }
         return chunks;
@@ -114,16 +108,17 @@ public class IterativeParallelism implements AdvancedIP {
                                            final List<T> values,
                                            final Function<Stream<T>, Stream<? extends U>> collector
     ) throws InterruptedException {
-        return this.parallel(threads, values, collector, s -> s.flatMap(o -> o).collect(Collectors.toList()));
+        return parallel(threads, values, collector, s -> s.flatMap(Function.identity()).collect(Collectors.toList()));
     }
 
     @Override
     public <T> List<T> filter(final int threads, final List<? extends T> values, final Predicate<? super T> predicate) throws InterruptedException {
-        return this.streamOperation(threads, values, s -> s.filter(predicate));
+        return streamOperation(threads, values, s -> s.filter(predicate));
     }
 
     @Override
     public <T, U> List<U> map(final int threads, final List<? extends T> values, final Function<? super T, ? extends U> f) throws InterruptedException {
+        // :NOTE: Однопоток
         return streamOperation(threads, values, s -> s.map(f));
     }
 

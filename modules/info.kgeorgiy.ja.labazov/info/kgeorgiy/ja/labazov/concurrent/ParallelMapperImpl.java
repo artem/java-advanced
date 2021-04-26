@@ -12,14 +12,17 @@ public class ParallelMapperImpl implements ParallelMapper {
     private final List<Thread> workers;
     private final Queue<Runnable> queue = new ArrayDeque<>();
 
-    public ParallelMapperImpl(int threads) {
+    public ParallelMapperImpl(final int threads) {
         workers = new ArrayList<>(threads);
 
+        // :NOTE: Stream
         for (int i = 0; i < threads; i++) {
-            Thread th = new Thread(() -> {
+            final Thread th = new Thread(() -> {
                 try {
-                    handleRequest();
-                } catch (InterruptedException e) {
+                    while (!Thread.interrupted()) {
+                        getTask().run();
+                    }
+                } catch (final InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
             });
@@ -28,38 +31,36 @@ public class ParallelMapperImpl implements ParallelMapper {
 
     }
 
-    private void handleRequest() throws InterruptedException {
-        while (!Thread.interrupted()) {
-            Runnable got;
-            synchronized (queue) {
-                while (queue.isEmpty()) {
-                    queue.wait();
-                }
-                got = queue.poll();
+    private Runnable getTask() throws InterruptedException {
+        synchronized (queue) {
+            while (queue.isEmpty()) {
+                queue.wait();
             }
-            got.run();
+            return queue.poll();
         }
     }
 
     @Override
-    public <T, R> List<R> map(Function<? super T, ? extends R> f, List<? extends T> args) throws InterruptedException {
-        TaskResult<R> res = new TaskResult<>(args.size());
+    public <T, R> List<R> map(final Function<? super T, ? extends R> f, final List<? extends T> args) throws InterruptedException {
+        final TaskResult<R> result = new TaskResult<>(args.size());
 
+        // :NOTE: IntStream
         for (int i = 0; i < args.size(); i++) {
             final int pos = i;
-            Runnable task = () -> res.set(pos, f.apply(args.get(pos)));
+            // :NOTE: Обработка ошибок
+            final Runnable task = () -> result.set(pos, f.apply(args.get(pos)));
             synchronized (queue) {
                 queue.add(task);
                 queue.notify();
             }
         }
 
-        return res.get();
+        return result.get();
     }
 
     @Override
     public void close() {
-        for (Thread worker : workers) {
+        for (final Thread worker : workers) {
             worker.interrupt();
         }
 
@@ -67,7 +68,7 @@ public class ParallelMapperImpl implements ParallelMapper {
             try {
                 workers.get(i).join();
                 i++;
-            } catch (InterruptedException ignored) {
+            } catch (final InterruptedException ignored) {
             }
         }
     }

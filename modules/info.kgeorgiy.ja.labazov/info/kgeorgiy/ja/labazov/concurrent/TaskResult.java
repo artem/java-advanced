@@ -7,16 +7,17 @@ public class TaskResult<T> {
     private final List<T> result;
     private int remains;
 
-    TaskResult(int remains) {
+    TaskResult(final int remains) {
         this.remains = remains;
         this.result = new ArrayList<>(remains);
 
+        // :NOTE: :(
         for (int i = 0; i < remains; i++) {
             result.add(null);
         }
     }
 
-    synchronized void set(int index, T element) {
+    synchronized void set(final int index, final T element) {
         result.set(index, element);
         if (--remains == 0) {
             notifyAll();
