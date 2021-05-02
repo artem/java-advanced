@@ -1,20 +1,17 @@
 package info.kgeorgiy.ja.labazov.concurrent;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-public class TaskResult<T> {
+class TaskResult<T> {
     private final List<T> result;
+    private RuntimeException ex;
     private int remains;
 
     TaskResult(final int remains) {
         this.remains = remains;
-        this.result = new ArrayList<>(remains);
-
-        // :NOTE: :(
-        for (int i = 0; i < remains; i++) {
-            result.add(null);
-        }
+        this.result = new ArrayList<>(Collections.nCopies(remains, null));
     }
 
     synchronized void set(final int index, final T element) {
@@ -24,11 +21,23 @@ public class TaskResult<T> {
         }
     }
 
-    synchronized public List<T> get() throws InterruptedException {
+    synchronized public List<T> get() throws RuntimeException, InterruptedException {
         while (remains != 0) {
             wait();
         }
 
+        if (ex != null) {
+            throw ex;
+        }
+
         return result;
+    }
+
+    synchronized public void setException(RuntimeException ex) {
+        if (this.ex == null) {
+            this.ex = ex;
+        } else {
+            this.ex.addSuppressed(ex);
+        }
     }
 }

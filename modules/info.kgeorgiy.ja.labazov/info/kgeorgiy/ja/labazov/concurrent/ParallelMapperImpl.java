@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 
 public class ParallelMapperImpl implements ParallelMapper {
     private final List<Thread> workers;
@@ -15,20 +16,18 @@ public class ParallelMapperImpl implements ParallelMapper {
     public ParallelMapperImpl(final int threads) {
         workers = new ArrayList<>(threads);
 
-        // :NOTE: Stream
-        for (int i = 0; i < threads; i++) {
-            final Thread th = new Thread(() -> {
-                try {
-                    while (!Thread.interrupted()) {
-                        getTask().run();
-                    }
-                } catch (final InterruptedException e) {
-                    Thread.currentThread().interrupt();
+        IntStream.range(0, threads).mapToObj(i -> new Thread(() -> {
+            try {
+                while (!Thread.interrupted()) {
+                    getTask().run();
                 }
-            });
-            ParallelUtils.addAndStartThread(th, workers);
-        }
-
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        })).forEach(th -> {
+            workers.add(th);
+            th.start();
+        });
     }
 
     private Runnable getTask() throws InterruptedException {
@@ -44,16 +43,18 @@ public class ParallelMapperImpl implements ParallelMapper {
     public <T, R> List<R> map(final Function<? super T, ? extends R> f, final List<? extends T> args) throws InterruptedException {
         final TaskResult<R> result = new TaskResult<>(args.size());
 
-        // :NOTE: IntStream
-        for (int i = 0; i < args.size(); i++) {
-            final int pos = i;
-            // :NOTE: Обработка ошибок
-            final Runnable task = () -> result.set(pos, f.apply(args.get(pos)));
+        IntStream.range(0, args.size()).<Runnable>mapToObj(pos -> () -> {
+            try {
+                result.set(pos, f.apply(args.get(pos)));
+            } catch (RuntimeException ex) {
+                result.setException(ex);
+            }
+        }).forEach(task -> {
             synchronized (queue) {
                 queue.add(task);
                 queue.notify();
             }
-        }
+        });
 
         return result.get();
     }

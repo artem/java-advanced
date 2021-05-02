@@ -6,6 +6,7 @@ module info.kgeorgiy.ja.labazov {
     requires transitive info.kgeorgiy.java.advanced.implementor;
     requires transitive info.kgeorgiy.java.advanced.concurrent;
     requires transitive info.kgeorgiy.java.advanced.mapper;
+    requires transitive info.kgeorgiy.java.advanced.crawler;
     requires java.compiler;
 
     exports info.kgeorgiy.ja.labazov.walk;
@@ -13,10 +14,12 @@ module info.kgeorgiy.ja.labazov {
     exports info.kgeorgiy.ja.labazov.student;
     exports info.kgeorgiy.ja.labazov.implementor;
     exports info.kgeorgiy.ja.labazov.concurrent;
+    exports info.kgeorgiy.ja.labazov.crawler;
 
     opens info.kgeorgiy.ja.labazov.walk to junit;
     opens info.kgeorgiy.ja.labazov.arrayset to junit;
     opens info.kgeorgiy.ja.labazov.student to junit;
     opens info.kgeorgiy.ja.labazov.implementor to junit;
     opens info.kgeorgiy.ja.labazov.concurrent to junit;
+    opens info.kgeorgiy.ja.labazov.crawler to junit;
 }

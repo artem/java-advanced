@@ -13,5 +13,6 @@
     <orderEntry type="module" module-name="info.kgeorgiy.java.advanced.implementor" />
     <orderEntry type="module" module-name="info.kgeorgiy.java.advanced.concurrent" />
     <orderEntry type="module" module-name="info.kgeorgiy.java.advanced.mapper" />
+    <orderEntry type="module" module-name="info.kgeorgiy.java.advanced.crawler" exported="" />
   </component>
 </module>

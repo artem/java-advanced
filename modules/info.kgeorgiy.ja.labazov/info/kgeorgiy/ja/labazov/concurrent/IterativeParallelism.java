@@ -7,6 +7,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class IterativeParallelism implements AdvancedIP {
@@ -26,8 +27,11 @@ public class IterativeParallelism implements AdvancedIP {
             final Function<Stream<T>, U> collector,
             final Function<Stream<U>, R> combiner
     ) throws InterruptedException {
-        // :NOTE: Лишние потоки
-        threads = Math.max(1, Math.min(values.size(), threads));
+        if (threads < 1) {
+            return combiner.apply(Stream.of(collector.apply(values.stream())));
+        }
+
+        threads = Math.min(values.size(), threads);
 
         final List<Stream<T>> chunks = chunks(threads, values);
         final List<U> result = parallelMapper != null
@@ -37,21 +41,15 @@ public class IterativeParallelism implements AdvancedIP {
     }
 
     private static <T, R> List<R> map(final Function<T, R> f, final List<T> args) throws InterruptedException {
-        final List<R> result = new ArrayList<>(args.size());
+        final List<R> result = new ArrayList<>(Collections.nCopies(args.size(), null));
         final List<Thread> workers = new ArrayList<>(args.size());
 
-        // :NOTE: nCopies
-        for (int i = 0; i < args.size(); i++) {
-            result.add(null);
-        }
-
-        // :NOTE: IntStream
-        for (int i = 0; i < args.size(); ++i) {
-            final int pos = i;
-            final Thread thread = new Thread(() -> result.set(pos, f.apply(args.get(pos))));
-            // :NOTE: :(
-            ParallelUtils.addAndStartThread(thread, workers);
-        }
+        IntStream.range(0, args.size())
+                .mapToObj(pos -> new Thread(() -> result.set(pos, f.apply(args.get(pos)))))
+                .forEach(thread -> {
+                    workers.add(thread);
+                    thread.start();
+                });
 
         joinAll(workers);
 
@@ -101,14 +99,18 @@ public class IterativeParallelism implements AdvancedIP {
     public String join(final int threads, final List<?> values) throws InterruptedException {
         return parallel(threads, values,
                 s -> s.map(Objects::toString).collect(Collectors.joining()),
-                s -> s.collect(Collectors.joining()));
+                s -> s.collect(Collectors.joining())
+        );
     }
 
     private <T, U> List<U> streamOperation(final int threads,
                                            final List<T> values,
                                            final Function<Stream<T>, Stream<? extends U>> collector
     ) throws InterruptedException {
-        return parallel(threads, values, collector, s -> s.flatMap(o->o).collect(Collectors.toList()));
+        return parallel(threads, values,
+                collector.andThen(s -> s.collect(Collectors.toList())),
+                s -> s.flatMap(Collection::stream).collect(Collectors.toList())
+        );
     }
 
     @Override
@@ -118,7 +120,6 @@ public class IterativeParallelism implements AdvancedIP {
 
     @Override
     public <T, U> List<U> map(final int threads, final List<? extends T> values, final Function<? super T, ? extends U> f) throws InterruptedException {
-        // :NOTE: Однопоток
         return streamOperation(threads, values, s -> s.map(f));
     }
 
@@ -136,7 +137,8 @@ public class IterativeParallelism implements AdvancedIP {
     public <T> boolean all(final int threads, final List<? extends T> values, final Predicate<? super T> predicate) throws InterruptedException {
         return parallel(threads, values,
                 s -> s.allMatch(predicate),
-                s -> s.allMatch(Boolean::booleanValue));
+                s -> s.allMatch(Boolean::booleanValue)
+        );
     }
 
     @Override
@@ -152,7 +154,8 @@ public class IterativeParallelism implements AdvancedIP {
     public <T, R> R mapReduce(final int threads, final List<T> values, final Function<T, R> function, final Monoid<R> monoid) throws InterruptedException {
         return parallel(threads, values,
                 s -> applyFun(s.map(function), monoid),
-                s -> applyFun(s, monoid));
+                s -> applyFun(s, monoid)
+        );
     }
 
     @Override
