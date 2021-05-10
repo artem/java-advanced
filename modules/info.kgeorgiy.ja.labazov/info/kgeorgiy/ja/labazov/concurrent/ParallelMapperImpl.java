@@ -3,10 +3,10 @@ package info.kgeorgiy.ja.labazov.concurrent;
 import info.kgeorgiy.java.advanced.mapper.ParallelMapper;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class ParallelMapperImpl implements ParallelMapper {
@@ -14,9 +14,8 @@ public class ParallelMapperImpl implements ParallelMapper {
     private final Queue<Runnable> queue = new ArrayDeque<>();
 
     public ParallelMapperImpl(final int threads) {
-        workers = new ArrayList<>(threads);
-
-        IntStream.range(0, threads).mapToObj(i -> new Thread(() -> {
+        // :NOTE: :(
+        workers = IntStream.range(0, threads).mapToObj(i -> new Thread(() -> {
             try {
                 while (!Thread.interrupted()) {
                     getTask().run();
@@ -24,10 +23,8 @@ public class ParallelMapperImpl implements ParallelMapper {
             } catch (final InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
-        })).forEach(th -> {
-            workers.add(th);
-            th.start();
-        });
+        })).collect(Collectors.toList());
+        workers.forEach(Thread::start);
     }
 
     private Runnable getTask() throws InterruptedException {
@@ -43,22 +40,25 @@ public class ParallelMapperImpl implements ParallelMapper {
     public <T, R> List<R> map(final Function<? super T, ? extends R> f, final List<? extends T> args) throws InterruptedException {
         final TaskResult<R> result = new TaskResult<>(args.size());
 
-        IntStream.range(0, args.size()).<Runnable>mapToObj(pos -> () -> {
+        IntStream.range(0, args.size()).forEach(pos -> addTask(() -> {
             try {
                 result.set(pos, f.apply(args.get(pos)));
-            } catch (RuntimeException ex) {
+            } catch (final RuntimeException ex) {
                 result.setException(ex);
             }
-        }).forEach(task -> {
-            synchronized (queue) {
-                queue.add(task);
-                queue.notify();
-            }
-        });
+        }));
 
         return result.get();
     }
 
+    private void addTask(final Runnable task) {
+        synchronized (queue) {
+            queue.add(task);
+            queue.notify();
+        }
+    }
+
+    // :NOTE: "подвисшие" клиенты
     @Override
     public void close() {
         for (final Thread worker : workers) {

@@ -17,11 +17,12 @@ class TaskResult<T> {
     synchronized void set(final int index, final T element) {
         result.set(index, element);
         if (--remains == 0) {
+            // :NOTE: notifyAll
             notifyAll();
         }
     }
 
-    synchronized public List<T> get() throws RuntimeException, InterruptedException {
+    synchronized public List<T> get() throws InterruptedException {
         while (remains != 0) {
             wait();
         }
@@ -33,7 +34,8 @@ class TaskResult<T> {
         return result;
     }
 
-    synchronized public void setException(RuntimeException ex) {
+    // :NOTE: Бесконечное ожидание
+    synchronized public void setException(final RuntimeException ex) {
         if (this.ex == null) {
             this.ex = ex;
         } else {
