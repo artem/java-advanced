@@ -10,6 +10,12 @@ public class Tester extends BaseTester {
         new Tester()
                 .add("easy", EasyCrawlerTest.class)
                 .add("hard", HardCrawlerTest.class)
+                .add("advanced", AdvancedCrawlerTest.class)
                 .run(args);
+    }
+
+    static {
+        //noinspection ConstantConditions
+        assert Downloader.class.isAssignableFrom(CachingDownloader.class);
     }
 }
