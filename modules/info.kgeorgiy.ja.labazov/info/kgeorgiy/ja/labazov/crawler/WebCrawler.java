@@ -1,25 +1,24 @@
 package info.kgeorgiy.ja.labazov.crawler;
 
-import info.kgeorgiy.java.advanced.crawler.CachingDownloader;
-import info.kgeorgiy.java.advanced.crawler.Crawler;
-import info.kgeorgiy.java.advanced.crawler.Downloader;
-import info.kgeorgiy.java.advanced.crawler.Result;
+import info.kgeorgiy.java.advanced.crawler.*;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.*;
 
 public class WebCrawler implements Crawler {
     private final Downloader downloader;
-    private final int downloaders;
-    private final int extractors;
+    private final ExecutorService downloaders;
+    private final ExecutorService extractors;
     private final int perHost;
 
     public WebCrawler(Downloader downloader, int downloaders, int extractors, int perHost) {
         this.downloader = downloader;
-        this.downloaders = downloaders;
-        this.extractors = extractors;
+        this.downloaders = Executors.newFixedThreadPool(downloaders);
+        this.extractors = Executors.newFixedThreadPool(extractors);
         this.perHost = perHost;
     }
 
@@ -58,31 +57,78 @@ public class WebCrawler implements Crawler {
         }
 
         try {
-            new WebCrawler(new CachingDownloader(), downloads, extractors, perHost).download(args[0], depth);
+            Crawler kralya = new WebCrawler(new CachingDownloader(), downloads, extractors, perHost);
+            kralya.download(args[0], depth);
+            kralya.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    private Set<String> downloadImpl() {
-        Set<String> downloaded = new HashSet<>();
-
-        return downloaded;
     }
 
     @Override
     public Result download(String url, int depth) {
-        //List.copyOf();
-        try {
-            downloader.download(url);
-        } catch (IOException e) {
-            e.printStackTrace();
+        final Set<String> visited = ConcurrentHashMap.newKeySet();
+        final Set<String> successful = ConcurrentHashMap.newKeySet();
+        final Map<String, IOException> failed = new ConcurrentHashMap<>();
+        Queue<String> queue = new ConcurrentLinkedQueue<>();
+        final Phaser phaser = new Phaser(1);
+
+        queue.add(url);
+
+        while (phaser.getPhase() < depth && !queue.isEmpty()) {
+            final Queue<String> newQueue = new ConcurrentLinkedQueue<>();
+
+            while (!queue.isEmpty()) {
+                String currentUrl = queue.poll();
+
+                if (!visited.add(currentUrl)) {
+                    continue;
+                }
+
+                downloadUrl(depth, successful, failed, phaser, newQueue, currentUrl);
+            }
+            phaser.arriveAndAwaitAdvance();
+            queue = newQueue;
         }
-        return null;//ew Result();
+
+        return new Result(new ArrayList<>(successful), failed);
+    }
+
+    private void downloadUrl(int depth, Set<String> successful, Map<String, IOException> failed, Phaser phaser, Queue<String> newQueue, String url) {
+        phaser.register();
+        downloaders.submit(() -> {
+            try {
+                Document res = downloader.download(url);
+                if (phaser.getPhase() + 1 < depth) {
+                    extractUrl(successful, failed, phaser, newQueue, url, res);
+                } else {
+                    successful.add(url);
+                }
+            } catch (IOException e) {
+                failed.put(url, e);
+            } finally {
+                phaser.arriveAndDeregister();
+            }
+        });
+    }
+
+    private void extractUrl(Set<String> successful, Map<String, IOException> failed, Phaser phaser, Queue<String> newQueue, String url, Document document) {
+        phaser.register();
+        extractors.submit(() -> {
+            try {
+                newQueue.addAll(document.extractLinks());
+                successful.add(url);
+            } catch (IOException e) {
+                failed.put(url, e);
+            } finally {
+                phaser.arriveAndDeregister();
+            }
+        });
     }
 
     @Override
     public void close() {
-
+        downloaders.shutdownNow();
+        extractors.shutdownNow();
     }
 }
