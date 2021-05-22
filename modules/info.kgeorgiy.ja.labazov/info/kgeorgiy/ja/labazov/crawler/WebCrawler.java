@@ -39,6 +39,7 @@ public class WebCrawler implements AdvancedCrawler {
         }
 
         try {
+            /* Switch technology */
             switch (args.length) {
                 case 5:
                     perHost = Integer.parseUnsignedInt(args[4]);
