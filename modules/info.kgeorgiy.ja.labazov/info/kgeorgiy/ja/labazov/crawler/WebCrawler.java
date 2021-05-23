@@ -124,8 +124,8 @@ public class WebCrawler implements AdvancedCrawler {
 
     @Override
     public Result download(String url, int depth, List<String> hosts) {
-        final Set<String> allowed = new HashSet<>(hosts);
-        return download(url, depth, allowed::contains);
+        //final Set<String> allowed = new HashSet<>(hosts);
+        return download(url, depth, hosts::contains);
     }
 
     private Result download(String url, int depth, Predicate<String> allowed) {
