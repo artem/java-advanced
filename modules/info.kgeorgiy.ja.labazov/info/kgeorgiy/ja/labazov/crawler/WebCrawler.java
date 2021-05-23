@@ -72,7 +72,6 @@ public class WebCrawler implements Crawler {
 
     @Override
     public Result download(String url, int depth) {
-        //List.copyOf();
         try {
             downloader.download(url);
         } catch (IOException e) {
