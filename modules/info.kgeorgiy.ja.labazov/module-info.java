@@ -9,6 +9,8 @@ module info.kgeorgiy.ja.labazov {
     requires transitive info.kgeorgiy.java.advanced.crawler;
     requires transitive info.kgeorgiy.java.advanced.hello;
     requires java.compiler;
+    requires java.rmi;
+    requires jdk.httpserver;
 
     exports info.kgeorgiy.ja.labazov.walk;
     exports info.kgeorgiy.ja.labazov.arrayset;
