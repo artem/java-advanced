@@ -19,6 +19,7 @@ module info.kgeorgiy.ja.labazov {
     exports info.kgeorgiy.ja.labazov.concurrent;
     exports info.kgeorgiy.ja.labazov.crawler;
     exports info.kgeorgiy.ja.labazov.hello;
+    exports info.kgeorgiy.ja.labazov.bank;
 
     opens info.kgeorgiy.ja.labazov.walk to junit;
     opens info.kgeorgiy.ja.labazov.arrayset to junit;

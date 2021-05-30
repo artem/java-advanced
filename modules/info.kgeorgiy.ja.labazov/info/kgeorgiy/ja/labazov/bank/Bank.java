@@ -17,4 +17,7 @@ public interface Bank extends Remote {
      * @return account with specified identifier or {@code null} if such account does not exists.
      */
     Account getAccount(String id) throws RemoteException;
+
+    boolean createPerson(String firstName, String lastName, long passportId) throws RemoteException;
+    Person getPerson(String id, boolean remote) throws RemoteException;
 }

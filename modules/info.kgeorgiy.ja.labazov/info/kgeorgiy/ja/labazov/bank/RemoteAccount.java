@@ -1,28 +1,28 @@
 package info.kgeorgiy.ja.labazov.bank;
 
-public class RemoteAccount implements Account {
-    private final String id;
-    private int amount;
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 
-    public RemoteAccount(final String id) {
-        this.id = id;
-        amount = 0;
+public class RemoteAccount extends UnicastRemoteObject implements Account {
+    private final LocalAccount account;
+
+    public RemoteAccount(LocalAccount account, int port) throws RemoteException {
+        super(port);
+        this.account = account;
     }
 
     @Override
-    public String getId() {
-        return id;
+    public String getId() throws RemoteException {
+        return account.getId();
     }
 
     @Override
-    public synchronized int getAmount() {
-        System.out.println("Getting amount of money for account " + id);
-        return amount;
+    public int getAmount() throws RemoteException {
+        return account.getAmount();
     }
 
     @Override
-    public synchronized void setAmount(final int amount) {
-        System.out.println("Setting amount of money for account " + id);
-        this.amount = amount;
+    public void setAmount(int amount) throws RemoteException {
+        account.setAmount(amount);
     }
 }
