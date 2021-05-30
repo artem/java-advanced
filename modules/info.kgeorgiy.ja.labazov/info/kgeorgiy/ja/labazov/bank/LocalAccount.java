@@ -1,6 +1,8 @@
 package info.kgeorgiy.ja.labazov.bank;
 
-public class LocalAccount implements Account {
+import java.io.Serializable;
+
+public class LocalAccount implements Account, Serializable {
     private final String id;
     private int amount; // todo concurrency
 
