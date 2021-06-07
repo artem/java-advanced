@@ -1,5 +1,5 @@
 module info.kgeorgiy.ja.labazov {
-    requires transitive quickcheck;
+    requires transitive org.junit.jupiter.api;
 
     requires transitive info.kgeorgiy.java.advanced.base;
     requires transitive info.kgeorgiy.java.advanced.student;
@@ -12,6 +12,7 @@ module info.kgeorgiy.ja.labazov {
     requires java.rmi;
     requires jdk.httpserver;
 
+
     exports info.kgeorgiy.ja.labazov.walk;
     exports info.kgeorgiy.ja.labazov.arrayset;
     exports info.kgeorgiy.ja.labazov.student;
@@ -20,6 +21,7 @@ module info.kgeorgiy.ja.labazov {
     exports info.kgeorgiy.ja.labazov.crawler;
     exports info.kgeorgiy.ja.labazov.hello;
     exports info.kgeorgiy.ja.labazov.bank;
+    exports info.kgeorgiy.ja.labazov.text;
 
     opens info.kgeorgiy.ja.labazov.walk to junit;
     opens info.kgeorgiy.ja.labazov.arrayset to junit;
@@ -28,4 +30,6 @@ module info.kgeorgiy.ja.labazov {
     opens info.kgeorgiy.ja.labazov.concurrent to junit;
     opens info.kgeorgiy.ja.labazov.crawler to junit;
     opens info.kgeorgiy.ja.labazov.hello to junit;
+    opens info.kgeorgiy.ja.labazov.bank to org.junit.jupiter.api, org.junit.platform.commons;
+    opens info.kgeorgiy.ja.labazov.text to org.junit.jupiter.api, org.junit.platform.commons;
 }

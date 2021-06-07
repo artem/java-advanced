@@ -8,12 +8,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
 public class HelloUDPClient implements HelloClient {
-    private final static Pattern CORRECT = Pattern.compile("\\D*(\\d+)\\D+(\\d+)\\D*");
 
     public static void main(final String[] args) {
         if (args.length != 5) {
@@ -47,10 +44,7 @@ public class HelloUDPClient implements HelloClient {
         new HelloUDPClient().run(args[0], port, args[2], threads, requests);
     }
 
-    private static boolean validateResponse(final String response, final int threadId, final int requestId) {
-        final Matcher matcher = CORRECT.matcher(response);
-        return matcher.matches() && matcher.group(1).equals(String.valueOf(threadId)) && matcher.group(2).equals(String.valueOf(requestId));
-    }
+
 
     private static void threadRequest(final String prefix, final int threadId, final int requests, final SocketAddress address) {
         try (final DatagramSocket socket = new DatagramSocket()) {
@@ -74,7 +68,7 @@ public class HelloUDPClient implements HelloClient {
                         final String response = new String(packet.getData(), 0, packet.getLength(), StandardCharsets.UTF_8);
                         System.out.println(response);
 
-                        if (validateResponse(response, threadId, i)) {
+                        if (HelloUtils.validateResponse(response, threadId, i)) {
                             break;
                         }
                     } catch (final IOException ignored) {

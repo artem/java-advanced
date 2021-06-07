@@ -6,14 +6,13 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 public class HelloUDPServer implements HelloServer {
-    private static final byte[] PREFIX = "Hello, ".getBytes(StandardCharsets.UTF_8);
+
     private DatagramSocket socket;
     private ExecutorService workers;
 
@@ -68,12 +67,12 @@ public class HelloUDPServer implements HelloServer {
             try {
                 socket.receive(packet);
 
-                final byte[] responseBuf = new byte[PREFIX.length + packet.getLength()];
-                System.arraycopy(PREFIX, 0, responseBuf, 0, PREFIX.length);
+                final byte[] responseBuf = new byte[HelloUtils.PREFIX.length + packet.getLength()];
+                System.arraycopy(HelloUtils.PREFIX, 0, responseBuf, 0, HelloUtils.PREFIX.length);
                 System.arraycopy(packet.getData(),
                         packet.getOffset(),
                         responseBuf,
-                        PREFIX.length,
+                        HelloUtils.PREFIX.length,
                         packet.getLength());
 
                 packet.setData(responseBuf);
