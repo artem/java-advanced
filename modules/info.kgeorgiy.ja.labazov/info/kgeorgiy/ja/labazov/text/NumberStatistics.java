@@ -5,13 +5,16 @@ import java.text.ParsePosition;
 import java.util.DoubleSummaryStatistics;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Objects;
 
 public class NumberStatistics extends UnitStatistics {
+    private final NumberFormat formatter;
     private final DoubleSummaryStatistics stats = new DoubleSummaryStatistics();
     private final HashSet<Double> distinct = new HashSet<>();
 
     public NumberStatistics(final Locale locale) {
         super(locale);
+        formatter = NumberFormat.getInstance(locale);
     }
 
     @Override
@@ -24,7 +27,6 @@ public class NumberStatistics extends UnitStatistics {
     }
 
     public boolean accept(final String str, final ParsePosition pos) {
-        final NumberFormat formatter = NumberFormat.getInstance(locale);
         final Number number = formatter.parse(str, pos);
         if (number != null) {
             accept(number.doubleValue());
@@ -59,5 +61,18 @@ public class NumberStatistics extends UnitStatistics {
 
     public double getMax() {
         return stats.getMax();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        NumberStatistics that = (NumberStatistics) o;
+        return formatter.equals(that.formatter) && stats.equals(that.stats) && distinct.equals(that.distinct);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(formatter, stats, distinct);
     }
 }

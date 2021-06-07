@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.BreakIterator;
+import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.util.Locale;
@@ -17,6 +18,8 @@ public class TextStatistics {
     private final NumberStatistics currency;
     private final DateStatistics dates;
 
+    private final NumberFormat currencyFormatter;
+
     public TextStatistics(Locale textLocale) {
         this.textLocale = textLocale;
         sentences = new StringStatistics(textLocale);
@@ -24,6 +27,8 @@ public class TextStatistics {
         numbers = new NumberStatistics(textLocale);
         currency = new NumberStatistics(textLocale);
         dates = new DateStatistics(textLocale);
+
+        currencyFormatter = NumberFormat.getCurrencyInstance(textLocale);
     }
 
     public static void printAt(int pos, String source) { //todo
@@ -34,9 +39,9 @@ public class TextStatistics {
         System.out.println(source.substring(start,end));
     }
 
-    private boolean acceptCurrency(final String text, final ParsePosition position) { //TODO
-        final NumberFormat formatter = NumberFormat.getCurrencyInstance(textLocale);
-        final Number money = formatter.parse(text, position);
+    private boolean acceptCurrency(final String text, final ParsePosition position) { //TODO + perf
+
+        final Number money = currencyFormatter.parse(text, position);
         if (money != null) {
             currency.accept(money.doubleValue());
             return true;
@@ -73,64 +78,86 @@ public class TextStatistics {
 
             final boolean tryParseExtra = dates.accept(source, pos) || acceptCurrency(source, pos) || numbers.accept(source, pos);
 
-            if (!tryParseExtra && StringStatistics.isWord(source, start, end)) {
+            if (tryParseExtra) {
+                boundary.following(pos.getIndex());
+                boundary.previous();
+                continue;
+            } else if (StringStatistics.isWord(source, start, end)) {
                 words.accept(source.substring(start, end));
             }
         }
     }
 
     private static void exportStats(final TextStatistics stats, final Path outDir, final Locale locale) throws IOException {
-        final BufferedWriter out = Files.newBufferedWriter(outDir);
+        try (final BufferedWriter out = Files.newBufferedWriter(outDir)) {
+            out.write("Сводная статистика");
+            out.newLine();
+            out.write(String.format("\tЧисло предложений: %d%n", stats.sentences.getAmount()));
+            out.write(String.format("\tЧисло слов: %d%n", stats.words.getAmount()));
+            out.write(String.format("\tЧисло чисел: %d%n", stats.numbers.getAmount()));
+            out.write(String.format("\tЧисло сумм: %d%n", stats.currency.getAmount()));
+            out.write(String.format("\tЧисло дат: %d%n", stats.dates.getAmount()));
 
-        out.write("Сводная статистика");
-        out.newLine();
-        out.write(String.format("\tЧисло предложений: %d", stats.sentences.getAmount()));
-        out.write(String.format("\tЧисло слов: %d", stats.words.getAmount()));
-        out.write(String.format("\tЧисло чисел: %d", stats.numbers.getAmount()));
-        out.write(String.format("\tЧисло сумм: %d", stats.currency.getAmount()));
-        out.write(String.format("\tЧисло дат: %d", stats.dates.getAmount()));
+            out.write("Статистика по предложениям");
+            out.newLine();
+            long am = stats.sentences.getAmount();
+            out.write(String.format("\tЧисло предложений: %d (%d различных)%n", am, stats.sentences.getDistinct()));
+            if (am != 0) {
+                out.write(String.format("\tМинимальное предложение: \"%s\"%n", stats.sentences.getMin()));
+                out.write(String.format("\tМаксимальное предложение: \"%s\"%n", stats.sentences.getMax()));
+                out.write(String.format("\tМинимальная длина предложения: %d (\"%s\")%n", stats.sentences.getShortest().length(), stats.sentences.getShortest()));
+                out.write(String.format("\tМаксимальная длина предложения: %d (\"%s\")%n", stats.sentences.getLongest().length(), stats.sentences.getLongest()));
+                out.write(String.format("\tСредняя длина предложения: \"%f\"%n", stats.sentences.getAverage()));
+            }
 
-        out.write("Статистика по предложениям");
-        out.newLine();
-        out.write(String.format("\tЧисло предложений: %1$d (%1$d различных)", stats.sentences.getAmount()));
-        out.write(String.format("\tМинимальное предложение: \"%s\"", stats.sentences.getMin()));
-        out.write(String.format("\tМаксимальное предложение: \"%s\"", stats.sentences.getMax()));
-        out.write(String.format("\tМинимальная длина предложения: %d (\"%s\")", stats.sentences.getShortest().length(), stats.sentences.getShortest()));
-        out.write(String.format("\tМаксимальная длина предложения: %d (\"%s\")", stats.sentences.getLongest().length(), stats.sentences.getLongest()));
-        out.write(String.format("\tСредняя длина предложения: \"%f\"", stats.sentences.getAverage()));
+            out.write("Статистика по словам");
+            out.newLine();
+            am = stats.words.getAmount();
+            out.write(String.format("\tЧисло слов: %d (%d различных)%n", am, stats.words.getDistinct()));
+            if (am != 0) {
+                out.write(String.format("\tМинимальное слово: \"%s\"%n", stats.words.getMin()));
+                out.write(String.format("\tМаксимальное слово: \"%s\"%n", stats.words.getMax()));
+                out.write(String.format("\tМинимальная длина слова: %d (\"%s\")%n", stats.words.getShortest().length(), stats.words.getShortest()));
+                out.write(String.format("\tМаксимальная длина слова: %d (\"%s\")%n", stats.words.getLongest().length(), stats.words.getLongest()));
+                out.write(String.format("\tСредняя длина слова: \"%f\"%n", stats.words.getAverage()));
+            }
 
-        out.write("Статистика по словам");
-        out.newLine();
-        out.write(String.format("\tЧисло слов: %1$d (%1$d различных)", stats.words.getAmount()));
-        out.write(String.format("\tМинимальное слово: \"%s\"", stats.words.getMin()));
-        out.write(String.format("\tМаксимальное слово: \"%s\"", stats.words.getMax()));
-        out.write(String.format("\tМинимальная длина слова: %d (\"%s\")", stats.words.getShortest().length(), stats.words.getShortest()));
-        out.write(String.format("\tМаксимальная длина слова: %d (\"%s\")", stats.words.getLongest().length(), stats.words.getLongest()));
-        out.write(String.format("\tСредняя длина слова: \"%f\"", stats.words.getAverage()));
+            out.write("Статистика по числам");
+            out.newLine();
+            am = stats.numbers.getAmount();
+            out.write(String.format("\tЧисло чисел: %d (%d различных)%n", am, stats.numbers.getDistinct()));
+            if (am != 0) {
+                out.write(String.format("\tМинимальное число: \"%f\"%n", stats.numbers.getMin()));
+                out.write(String.format("\tМаксимальное число: \"%f\"%n", stats.numbers.getMax()));
+                out.write(String.format("\tСреднее число: \"%f\"%n", stats.numbers.getAverage()));
+            }
 
-        out.write("Статистика по числам");
-        out.newLine();
-        out.write(String.format("\tЧисло чисел: %1$d (%1$d различных)", stats.numbers.getAmount()));
-        out.write(String.format("\tМинимальное число: \"%f\"", stats.numbers.getMin()));
-        out.write(String.format("\tМаксимальное число: \"%f\"", stats.numbers.getMax()));
-        out.write(String.format("\tСреднее число: \"%f\"", stats.numbers.getAverage()));
+            out.write("Статистика по суммам денег"); //todo format
+            out.newLine();
+            am = stats.currency.getAmount();
+            out.write(String.format("\tЧисло сумм: %d (%d различных)%n", am, stats.currency.getDistinct()));
+            if (am != 0) {
+                final NumberFormat nf = NumberFormat.getCurrencyInstance(locale);
+                out.write(String.format("\tМинимальная сумма: \"%s\"%n", nf.format(stats.currency.getMin())));
+                out.write(String.format("\tМаксимальная сумма: \"%s\"%n", nf.format(stats.currency.getMax())));
+                out.write(String.format("\tСредняя сумма: \"%s\"%n", nf.format(stats.currency.getAverage())));
+            }
 
-        out.write("Статистика по суммам денег");
-        out.newLine();
-        out.write(String.format("\tЧисло сумм: %1$d (%1$d различных)", stats.currency.getAmount())); //todo format
-        out.write(String.format("\tМинимальная сумма: \"%f\"", stats.currency.getMin()));
-        out.write(String.format("\tМаксимальная сумма: \"%f\"", stats.currency.getMax()));
-        out.write(String.format("\tСредняя сумма: \"%f\"", stats.currency.getAverage()));
-
-        out.write("Статистика по датам");
-        out.newLine();
-        out.write(String.format("\tЧисло дат: %1$d (%1$d различных)", stats.dates.getAmount()));
-        out.write(String.format("\tМинимальная дата: \"%s\"", stats.dates.getMin()));
-        out.write(String.format("\tМаксимальная дата: \"%s\"", stats.dates.getMax()));
-        out.write(String.format("\tСредняя дата: \"%s\"", stats.dates.getAverageDate()));
+            out.write("Статистика по датам");
+            out.newLine();
+            am = stats.dates.getAmount();
+            out.write(String.format("\tЧисло дат: %d (%d различных)%n", am, stats.dates.getDistinct()));
+            if (am != 0) {
+                final DateFormat df = DateFormat.getDateInstance(DateFormat.FULL, locale);
+                out.write(String.format("\tМинимальная дата: \"%s\"%n", df.format(stats.dates.getMinDate())));
+                out.write(String.format("\tМаксимальная дата: \"%s\"%n", df.format(stats.dates.getMaxDate())));
+                out.write(String.format("\tСредняя дата: \"%s\"%n", df.format(stats.dates.getAverageDate())));
+            }
+        }
     }
 
     public static void main(String[] args) {
+        args = new String[] {"ru-RU", "ru-RU", "tolstoy.txt", "output.txt"};
         final Locale inLocale = Locale.forLanguageTag(args[0]);
         final String content;
         try {

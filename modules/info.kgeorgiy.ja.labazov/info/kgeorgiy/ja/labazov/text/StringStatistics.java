@@ -1,13 +1,12 @@
 package info.kgeorgiy.ja.labazov.text;
 
 import java.text.Collator;
-import java.text.ParsePosition;
 import java.util.*;
 
 public class StringStatistics extends UnitStatistics {
     private final IntSummaryStatistics stats = new IntSummaryStatistics();
-    private final NavigableSet<String> distinct;
-    private final NavigableSet<String> length;
+    private final TreeSet<String> distinct;
+    private final TreeSet<String> length;
 
     public StringStatistics(final Locale locale) {
         super(locale);
@@ -62,5 +61,18 @@ public class StringStatistics extends UnitStatistics {
                 return true;
         }
         return false;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        StringStatistics that = (StringStatistics) o;
+        return stats.equals(that.stats) && distinct.equals(that.distinct) && length.equals(that.length);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(stats, distinct, length);
     }
 }
