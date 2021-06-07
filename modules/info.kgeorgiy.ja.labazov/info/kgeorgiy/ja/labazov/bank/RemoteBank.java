@@ -1,5 +1,6 @@
 package info.kgeorgiy.ja.labazov.bank;
 
+import java.rmi.NoSuchObjectException;
 import java.rmi.RemoteException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -17,7 +18,7 @@ public class RemoteBank implements Bank {
     public Account createAccount(final String id) throws RemoteException {
         final LocalAccount localAccount = new LocalAccount(id);
 
-        final String ownerId = Account.getOwnerId(localAccount);
+        final String ownerId = Bank.getOwnerId(localAccount.getId());
         if (ownerId != null) {
             final RemotePerson owner = persons.get(ownerId);
             if (owner == null) {
@@ -38,9 +39,22 @@ public class RemoteBank implements Bank {
     }
 
     @Override
-    public Account getAccount(final String id) { // todo owned
+    public Account getAccount(final String id) throws RemoteException {
         System.out.println("Retrieving account " + id);
-        return orphanedAccounts.get(id);
+
+        final String ownerId = Bank.getOwnerId(id);
+
+        if (ownerId == null) {
+            return orphanedAccounts.get(id);
+        }
+
+        Person owner = persons.get(ownerId);
+        if (owner == null) {
+            System.out.println("Owner with id does not exist: " + ownerId);
+            return null;
+        }
+
+        return owner.getAccount(id.substring(ownerId.length() + 1));
     }
 
     @Override
@@ -61,7 +75,8 @@ public class RemoteBank implements Bank {
             if (remote) {
                 return person;
             } else {
-                return person.getLocalPerson();
+                final LocalPerson localPerson = person.getLocalPerson();
+                return new LocalPerson(localPerson);
             }
         } else {
             return null;

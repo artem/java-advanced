@@ -12,11 +12,5 @@ public interface Account extends Remote {
     /** Sets amount of money at the account. */
     void setAmount(int amount) throws RemoteException;
 
-    static String getOwnerId(Account account) throws RemoteException {
-        int separator = account.getId().indexOf(':');
-        if (separator < 0) {
-            return null;
-        }
-        return account.getId().substring(0, separator);
-    }
+    void addAmount(int amount) throws RemoteException;
 }

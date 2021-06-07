@@ -2,6 +2,7 @@ package info.kgeorgiy.ja.labazov.bank;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Objects;
 
 public class RemotePerson extends UnicastRemoteObject implements Person {
     private final LocalPerson person;
@@ -39,5 +40,19 @@ public class RemotePerson extends UnicastRemoteObject implements Person {
 
     RemoteAccount createAccount(LocalAccount acc) throws RemoteException {
         return new RemoteAccount(person.createAccount(acc), port);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        RemotePerson that = (RemotePerson) o;
+        return port == that.port && Objects.equals(person, that.person);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), person, port);
     }
 }

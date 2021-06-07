@@ -20,4 +20,12 @@ public interface Bank extends Remote {
 
     boolean createPerson(String firstName, String lastName, long passportId) throws RemoteException;
     Person getPerson(String id, boolean remote) throws RemoteException;
+
+    static String getOwnerId(final String id) throws RemoteException {
+        int separator = id.indexOf(':');
+        if (separator < 0) {
+            return null;
+        }
+        return id.substring(0, separator);
+    }
 }

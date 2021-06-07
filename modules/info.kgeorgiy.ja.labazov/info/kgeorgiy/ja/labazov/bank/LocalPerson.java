@@ -2,7 +2,9 @@ package info.kgeorgiy.ja.labazov.bank;
 
 import java.io.Serializable;
 import java.rmi.RemoteException;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class LocalPerson implements Person, Serializable {
@@ -16,6 +18,13 @@ public class LocalPerson implements Person, Serializable {
         this.lastName = lastName;
         this.passportId = passportId;
         this.accounts = new ConcurrentHashMap<>();
+    }
+
+    LocalPerson(final LocalPerson other) {
+        this.firstName = other.firstName;
+        this.lastName = other.lastName;
+        this.passportId = other.passportId;
+        this.accounts = new ConcurrentHashMap<>(other.accounts);
     }
 
     @Override
@@ -48,5 +57,18 @@ public class LocalPerson implements Person, Serializable {
         } else {
             return accounts.get(acc.getId());
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        LocalPerson that = (LocalPerson) o;
+        return passportId == that.passportId && firstName.equals(that.firstName) && lastName.equals(that.lastName) && accounts.equals(that.accounts);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(firstName, lastName, passportId, accounts);
     }
 }
